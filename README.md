@@ -24,7 +24,9 @@ Translations for the overlay and companion share JSON catalogs. See [Adding a la
 
 ## Get started
 
-Read the [installation and connection guide](docs/getting-started.md). Copy the add-on, companion executable and runtime folder together. No terminal is needed for normal use from ReShade.
+Download **CyRSAssistant-0.7.0-windows-x64.zip** from the [0.7.0 release](https://github.com/MrMybal/CyRSAssistant/releases/tag/v0.7.0). Close the game and extract it next to the ReShade DLL, keeping the folders. The add-on, companion and runtime folder are already at the ZIP root; Python is bundled.
+
+Read the [installation and connection guide](docs/getting-started.md). No terminal is needed for normal use from ReShade.
 
 In **Options > Permission mode**, choose:
 
@@ -48,7 +50,7 @@ python -m unittest discover -s tests -p 'test_*.py'
 python tools/package.py
 ```
 
-The package is written to `dist/CyRSAssistant-0.7.0.zip` and includes sources. Dependencies use pinned versions and checksums from their official projects. CyGameCapture and CyGPUInspector are not dependencies.
+For the ready-to-install ZIP, run `python tools/package.py --install`; it writes `dist/CyRSAssistant-0.7.0-windows-x64.zip`. The default command produces `dist/CyRSAssistant-0.7.0.zip` with sources and developer tools. Dependencies use pinned versions and checksums from their official projects. CyGameCapture and CyGPUInspector are not dependencies.
 
 ## Current limits
 

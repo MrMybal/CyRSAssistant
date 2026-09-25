@@ -24,6 +24,10 @@ Pour ajouter une langue, voir [le guide de traduction](docs/localization.md).
 
 ## Démarrage
 
+Téléchargez **CyRSAssistant-0.7.0-windows-x64.zip** depuis la [release 0.7.0](https://github.com/MrMybal/CyRSAssistant/releases/tag/v0.7.0). Fermez le jeu et extrayez le ZIP à côté de la DLL ReShade, en conservant les sous-dossiers. Les fichiers de l’add-on sont directement à la racine du ZIP et Python est intégré.
+
+Pour produire ce ZIP : `python tools/package.py --install`.
+
 Voir [le guide d'installation et de connexion](docs/getting-started.fr.md). Le paquet avec sources est produit dans `dist/CyRSAssistant-0.7.0.zip` avec `python tools/package.py`.
 
 Compilation depuis les sources (Visual Studio 2022 C++, Windows SDK et Python 3.11+) :
