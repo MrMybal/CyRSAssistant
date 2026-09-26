@@ -1,0 +1,3 @@
+#include "@CMAKE_SOURCE_DIR@/src/resources.h"
+IDI_CYRS_LOGO ICON "@CMAKE_SOURCE_DIR@/assets/cyrsassistant-logo.ico"
+IDR_CYRS_LOGO RCDATA "@CMAKE_SOURCE_DIR@/assets/cyrsassistant-logo.rgba"

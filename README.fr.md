@@ -1,10 +1,14 @@
+<p align="center">
+  <img src="assets/cyrsassistant-logo-turquoise.png" alt="CyRSAssistant" width="180" height="180">
+</p>
+
 # CyRSAssistant
 
 [English](README.md) | Français
 
 Assistant intégré à ReShade : décrire le rendu souhaité, exploiter les effets installés, régler un preset en direct et créer des effets adaptés. Les capacités avancées visent l'inspection du rendu, le masquage du HUD et le remplacement ciblé de shaders du jeu.
 
-État : prototype 0.7.0 Windows x64, compilé avec ReShade 6.8 / API 20. Génération FX et remplacement temporaire de pixel shaders testés dans Stray en DX11 et DX12. Compilation DXIL et création de PSO Shader Model 6 testées sur un périphérique DX12. La qualité du rendu pendant une partie reste à évaluer.
+État : prototype 0.7.1 Windows x64, compilé avec ReShade 6.8 / API 20. Génération FX et remplacement temporaire de pixel shaders testés dans Stray en DX11 et DX12. Compilation DXIL et création de PSO Shader Model 6 testées sur un périphérique DX12. La qualité du rendu pendant une partie reste à évaluer.
 
 ## Langue
 
@@ -24,11 +28,11 @@ Pour ajouter une langue, voir [le guide de traduction](docs/localization.md).
 
 ## Démarrage
 
-Téléchargez **CyRSAssistant-0.7.0-windows-x64.zip** depuis la [release 0.7.0](https://github.com/MrMybal/CyRSAssistant/releases/tag/v0.7.0). Fermez le jeu et extrayez le ZIP à côté de la DLL ReShade, en conservant les sous-dossiers. Les fichiers de l’add-on sont directement à la racine du ZIP et Python est intégré.
+Téléchargez **CyRSAssistant-0.7.1-windows-x64.zip** depuis la [release 0.7.1](https://github.com/MrMybal/CyRSAssistant/releases/tag/v0.7.1). Fermez le jeu et extrayez le ZIP à côté de la DLL ReShade, en conservant les sous-dossiers. Les fichiers de l’add-on sont directement à la racine du ZIP et Python est intégré.
 
 Pour produire ce ZIP : `python tools/package.py --install`.
 
-Voir [le guide d'installation et de connexion](docs/getting-started.fr.md). Le paquet avec sources est produit dans `dist/CyRSAssistant-0.7.0.zip` avec `python tools/package.py`.
+Voir [le guide d'installation et de connexion](docs/getting-started.fr.md). Le paquet avec sources est produit dans `dist/CyRSAssistant-0.7.1.zip` avec `python tools/package.py`.
 
 Compilation depuis les sources (Visual Studio 2022 C++, Windows SDK et Python 3.11+) :
 

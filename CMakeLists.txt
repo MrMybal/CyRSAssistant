@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
-project(CyRSAssistant VERSION 0.7.0 LANGUAGES CXX)
+project(CyRSAssistant VERSION 0.7.1 LANGUAGES CXX RC)
 if(NOT WIN32 OR NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
   message(FATAL_ERROR "CyRSAssistant requires Windows x64")
 endif()
@@ -14,7 +14,8 @@ add_custom_command(OUTPUT "${CYRS_LOCALE_HEADER}"
   DEPENDS ${CYRS_LOCALES} tools/generate_locales.py companion/localization.py
   VERBATIM)
 add_custom_target(cyrs_locales DEPENDS "${CYRS_LOCALE_HEADER}")
-add_library(CyRSAssistant SHARED src/addon.cpp src/bridge.cpp src/shader_tools.cpp src/dxc_tools.cpp src/pipeline_snapshot.cpp src/shader_lab.cpp)
+configure_file(src/resources.rc.in "${CMAKE_BINARY_DIR}/generated/resources.rc" @ONLY)
+add_library(CyRSAssistant SHARED "${CMAKE_BINARY_DIR}/generated/resources.rc" src/branding.cpp src/addon.cpp src/bridge.cpp src/shader_tools.cpp src/dxc_tools.cpp src/pipeline_snapshot.cpp src/shader_lab.cpp)
 add_dependencies(CyRSAssistant cyrs_locales)
 target_compile_features(CyRSAssistant PRIVATE cxx_std_17)
 target_include_directories(CyRSAssistant PRIVATE third_party/reshade/include third_party/imgui third_party/json src "${CMAKE_BINARY_DIR}/generated")

@@ -1,6 +1,7 @@
 #include <imgui.h>
 #include <reshade.hpp>
 #include "bridge.hpp"
+#include "branding.hpp"
 #include "capture.hpp"
 #include "shader_lab.hpp"
 #include "shader_tools.hpp"
@@ -17,7 +18,7 @@
 #include <filesystem>
 
 extern "C" __declspec(dllexport) const char *NAME = "CyRSAssistant";
-extern "C" __declspec(dllexport) const char *DESCRIPTION = "CyRSAssistant 0.7.0 - Cyberalien - Live shader assistant.";
+extern "C" __declspec(dllexport) const char *DESCRIPTION = "CyRSAssistant 0.7.1 - Cyberalien - Live shader assistant.";
 
 namespace {
 using namespace cyrs;
@@ -26,6 +27,7 @@ using namespace reshade::api;
 struct Parameter { effect_uniform_variable handle; json metadata; size_t count = 0; };
 struct Technique { effect_technique handle; json metadata; };
 struct Runtime {
+    Branding branding;
     uint64_t id = 0, generation = 0, revision = 0, prompt_id = 0, scan_id = 0;
     std::vector<Parameter> parameters;
     std::vector<Technique> techniques;
@@ -581,9 +583,19 @@ void init(effect_runtime *runtime) {
     reshade::get_config_value(runtime, "CYRSASSISTANT", "Endpoint", state.connection.endpoint.data(), &endpoint_size);
     reshade::get_config_value(runtime, "CYRSASSISTANT", "Model", state.connection.model.data(), &model_size);
     state.connection.endpoint.back() = 0; state.connection.model.back() = 0;
+    if (state.branding.create(runtime, addon_module))
+        reshade::log::message(reshade::log::level::info, "CyRSAssistant logo initialized.");
+    else
+        reshade::log::message(reshade::log::level::warning, "CyRSAssistant logo unavailable; using text header.");
     runtimes.emplace(runtime, std::move(state));
 }
-void destroy(effect_runtime *runtime) { std::lock_guard<std::recursive_mutex> lock(runtime_mutex); runtimes.erase(runtime); }
+void destroy(effect_runtime *runtime) {
+    std::lock_guard<std::recursive_mutex> lock(runtime_mutex);
+    auto it = runtimes.find(runtime);
+    if (it == runtimes.end()) return;
+    it->second.branding.destroy(runtime);
+    runtimes.erase(it);
+}
 void reload(effect_runtime *runtime) {
     std::lock_guard<std::recursive_mutex> lock(runtime_mutex);
     auto it = runtimes.find(runtime);
@@ -603,12 +615,19 @@ void overlay(effect_runtime *runtime) {
     auto tr = [&](const char *message) { return i18n::translate(s.language, message); };
     auto ui_label = [&](const char *message) { return i18n::label(s.language, message); };
     try {
-        ImGui::Text("CyRSAssistant 0.7.0 - %s", tr("AI chat"));
+        if (s.branding.view.handle) {
+            const float size = ImGui::GetTextLineHeight() * 2 + ImGui::GetStyle().ItemSpacing.y;
+            ImGui::Image(static_cast<ImTextureID>(s.branding.view.handle), ImVec2(size, size));
+            ImGui::SameLine();
+        }
+        ImGui::BeginGroup();
+        ImGui::Text("CyRSAssistant 0.7.1 - %s", tr("AI chat"));
         auto &c = s.connection;
         const bool ready = connected(c);
         const bool lost = c.wanted && GetTickCount64() - (c.heartbeat ? c.heartbeat : c.started) >= 10000;
         const auto color = ready ? ImVec4(0.4f, 0.9f, 0.5f, 1) : (lost || c.phase == "error") ? ImVec4(1, 0.45f, 0.35f, 1) : ImVec4(1, 0.8f, 0.35f, 1);
         ImGui::TextColored(color, "%s", ready ? tr("READY") : lost ? tr("LOCAL SERVICE UNREACHABLE") : c.phase == "connecting" ? tr("CONNECTING") : c.phase == "error" ? tr("CONNECTION ERROR") : tr("DISCONNECTED"));
+        ImGui::EndGroup();
         ImGui::TextWrapped("%s", lost ? tr("The service is not responding. Disconnect and reconnect to check it again.") : tr(c.message.c_str()));
         if (!c.wanted && ImGui::Button(ui_label("Connect to provider").c_str())) start_connection(runtime, c, s.language);
         const char *permission_names[] = {tr("Automatic"), tr("Ask each time"), tr("Full access to ReShade tools")};
@@ -871,7 +890,11 @@ extern "C" __declspec(dllexport) void AddonUninit(HMODULE module, HMODULE reshad
     reshade::unregister_event<reshade::addon_event::reshade_reloaded_effects>(reload);
     reshade::unregister_event<reshade::addon_event::destroy_effect_runtime>(destroy);
     reshade::unregister_event<reshade::addon_event::init_effect_runtime>(init);
-    runtimes.clear();
+    {
+        std::lock_guard<std::recursive_mutex> lock(runtime_mutex);
+        for (auto &[runtime, state] : runtimes) state.branding.destroy(runtime);
+        runtimes.clear();
+    }
     if (companion_process) { CloseHandle(companion_process); companion_process = nullptr; }
     reshade::unregister_addon(module, reshade_module);
 }

@@ -1,10 +1,14 @@
+<p align="center">
+  <img src="assets/cyrsassistant-logo-turquoise.png" alt="CyRSAssistant" width="180" height="180">
+</p>
+
 # CyRSAssistant
 
 English | [Français](README.fr.md)
 
 An AI assistant inside ReShade. Chat about the look you want, inspect installed effects and their actual parameters, adjust a preset, generate effects and replace selected game shaders.
 
-Version 0.7.0 is a Windows x64 prototype built against ReShade 6.8 / API 20. FX generation and temporary pixel shader replacement have been exercised in Stray with DX11 and DX12. DXIL compilation and Shader Model 6 PSO creation have also been tested on a DX12 device. Visual quality still needs evaluation in each game.
+Version 0.7.1 is a Windows x64 prototype built against ReShade 6.8 / API 20. FX generation and temporary pixel shader replacement have been exercised in Stray with DX11 and DX12. DXIL compilation and Shader Model 6 PSO creation have also been tested on a DX12 device. Visual quality still needs evaluation in each game.
 
 ## Language
 
@@ -24,7 +28,7 @@ Translations for the overlay and companion share JSON catalogs. See [Adding a la
 
 ## Get started
 
-Download **CyRSAssistant-0.7.0-windows-x64.zip** from the [0.7.0 release](https://github.com/MrMybal/CyRSAssistant/releases/tag/v0.7.0). Close the game and extract it next to the ReShade DLL, keeping the folders. The add-on, companion and runtime folder are already at the ZIP root; Python is bundled.
+Download **CyRSAssistant-0.7.1-windows-x64.zip** from the [0.7.1 release](https://github.com/MrMybal/CyRSAssistant/releases/tag/v0.7.1). Close the game and extract it next to the ReShade DLL, keeping the folders. The add-on, companion and runtime folder are already at the ZIP root; Python is bundled.
 
 Read the [installation and connection guide](docs/getting-started.md). No terminal is needed for normal use from ReShade.
 
@@ -50,7 +54,7 @@ python -m unittest discover -s tests -p 'test_*.py'
 python tools/package.py
 ```
 
-For the ready-to-install ZIP, run `python tools/package.py --install`; it writes `dist/CyRSAssistant-0.7.0-windows-x64.zip`. The default command produces `dist/CyRSAssistant-0.7.0.zip` with sources and developer tools. Dependencies use pinned versions and checksums from their official projects. CyGameCapture and CyGPUInspector are not dependencies.
+For the ready-to-install ZIP, run `python tools/package.py --install`; it writes `dist/CyRSAssistant-0.7.1-windows-x64.zip`. The default command produces `dist/CyRSAssistant-0.7.1.zip` with sources and developer tools. Dependencies use pinned versions and checksums from their official projects. CyGameCapture and CyGPUInspector are not dependencies.
 
 ## Current limits
 

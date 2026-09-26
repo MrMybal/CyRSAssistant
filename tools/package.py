@@ -100,6 +100,7 @@ def package(install=False):
         if install:
             (metadata / "INSTALL.txt").write_text(installation_notes(), encoding="utf-8")
         else:
+            shutil.copytree(ROOT / "assets", destination / "assets")
             for name in ("README.md", "README.fr.md"):
                 shutil.copy2(ROOT / name, destination / name)
             shutil.copytree(ROOT / "companion", destination / "companion", ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
@@ -108,7 +109,7 @@ def package(install=False):
                 (destination / name).write_text(f'import runpy\nrunpy.run_module("{module}", run_name="__main__")\n', encoding="utf-8")
             sources = destination / "source"
             sources.mkdir()
-            for name in ("src", "companion", "tools", "tests"):
+            for name in ("src", "companion", "tools", "tests", "assets"):
                 shutil.copytree(ROOT / name, sources / name, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
             for name in ("CMakeLists.txt", "README.md", "README.fr.md", "LICENSE", "THIRD_PARTY.md"):
                 shutil.copy2(ROOT / name, sources / name)
