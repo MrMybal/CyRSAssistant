@@ -1,0 +1,18 @@
+Microsoft Windows runtime components
+
+Copyright Microsoft Corporation. All rights reserved.
+
+The frozen CPython executable includes the Microsoft Visual C++ runtime
+(VCRUNTIME140.dll) and Windows Universal C Runtime components
+(ucrtbase.dll and api-ms-win-*.dll) selected by PyInstaller from the
+licensed Windows/Python installation. These are Microsoft components;
+they are not covered by CyRSAssistant's GPL license or by an SDK MIT license.
+
+The original, complete Microsoft Visual C++ Runtime 2015-2022 license terms
+are supplied in Microsoft-Visual-C-Runtime.docx without alteration.
+
+Microsoft license terms and redistribution information:
+https://visualstudio.microsoft.com/license-terms/vs2022-cruntime/
+https://learn.microsoft.com/cpp/windows/redistributing-visual-cpp-files
+
+The runtime does not include Visual Studio or its compiler toolchain.

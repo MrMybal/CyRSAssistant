@@ -1,10 +1,10 @@
 """Build either the developer distribution or a ready-to-extract ReShade install ZIP."""
 import argparse
 import hashlib
+import json
 from pathlib import Path
 import re
 import shutil
-import sys
 import tempfile
 import zipfile
 
@@ -13,12 +13,61 @@ VERSION = re.search(r"project\(CyRSAssistant VERSION ([0-9.]+)", (ROOT / "CMakeL
 RUNTIME_FILES = ("dxcompiler.dll", "dxil.dll", "LICENSE-LLVM.txt", "LICENSE-MS.txt")
 
 
+REQUIRED_LICENSES = (
+    'AssistantRuntime-Notices.txt',
+    'CyRSAssistant-GPL-3.0.txt',
+    'DXC-LLVM.txt',
+    'DXC-Microsoft.txt',
+    'DearImGui.txt',
+    'Expat.txt',
+    'Microsoft-Visual-C-Runtime.docx',
+    'Microsoft-Windows-Runtime.txt',
+    'OpenSSL.txt',
+    'PyInstaller.txt',
+    'Python.txt',
+    'ReShade.txt',
+    'SOURCES.txt',
+    'XZ.txt',
+    'bzip2.txt',
+    'libffi.txt',
+    'nlohmann-json.txt',
+    'zlib.txt',
+)
+
+
+def validate_delivery(binary, service):
+    manifest = json.loads(service.with_suffix(".build.json").read_text(encoding="utf-8"))
+    expected = json.loads((ROOT / "tools/runtime-licenses.lock.json").read_text(encoding="utf-8"))
+    if manifest["application_version"] != VERSION or manifest["sha256"] != hashlib.sha256(service.read_bytes()).hexdigest():
+        raise ValueError("Companion build is stale. Run tools/build_service.py before packaging.")
+    if any(manifest["components"].get(name) != expected[name] for name in ("python", "pyinstaller", "openssl", "expat", "zlib")):
+        raise ValueError("Frozen runtime does not match the licensed component versions")
+    if f"CyRSAssistant {VERSION} - Cyberalien".encode() not in binary.read_bytes():
+        raise ValueError("Add-on build is stale. Run tools/build.py before packaging.")
+    for name in REQUIRED_LICENSES:
+        if not (ROOT / "LICENCES" / name).is_file():
+            raise ValueError(f"Missing required license notice: {name}")
+    for name in ("Python.txt", "PyInstaller.txt"):
+        if hashlib.sha256((ROOT / "LICENCES" / name).read_bytes()).hexdigest() != manifest["license_sha256"][name]:
+            raise ValueError(f"License changed since the companion build: {name}")
+    originals = {"CyRSAssistant-GPL-3.0.txt": ROOT / "LICENSE",
+                 "ReShade.txt": ROOT / "third_party/reshade/LICENSE.md",
+                 "DearImGui.txt": ROOT / "third_party/imgui/LICENSE.txt",
+                 "nlohmann-json.txt": ROOT / "third_party/json/LICENSE.MIT",
+                 "DXC-LLVM.txt": binary.parent / "CyRSAssistantRuntime/LICENSE-LLVM.txt",
+                 "DXC-Microsoft.txt": binary.parent / "CyRSAssistantRuntime/LICENSE-MS.txt"}
+    for name, original in originals.items():
+        if (ROOT / "LICENCES" / name).read_bytes() != original.read_bytes():
+            raise ValueError(f"License differs from the distributed component: {name}")
+    for name, item in expected["notices"].items():
+        if hashlib.sha256((ROOT / "LICENCES" / name).read_bytes()).hexdigest() != item["sha256"]:
+            raise ValueError(f"License differs from the pinned upstream text: {name}")
+
+
 def copy_licenses(destination):
     destination.mkdir(parents=True, exist_ok=True)
-    for source, name in (("reshade/LICENSE.md", "ReShade.txt"), ("imgui/LICENSE.txt", "DearImGui.txt"), ("json/LICENSE.MIT", "nlohmann-json.txt")):
-        shutil.copy2(ROOT / "third_party" / source, destination / name)
-    shutil.copy2(Path(sys.base_prefix) / "LICENSE.txt", destination / "Python.txt")
-    shutil.copy2(ROOT / "build/packaging-env/Lib/site-packages/pyinstaller-6.20.0.dist-info/licenses/COPYING.txt", destination / "PyInstaller.txt")
+    for name in REQUIRED_LICENSES:
+        shutil.copyfile(ROOT / "LICENCES" / name, destination / name)
 
 
 def installation_notes():
@@ -65,12 +114,23 @@ La langue et les autorisations sont mémorisées par jeu. Les clés API restent
 uniquement en mémoire pour la session. Ce ZIP ne contient pas de preset et
 ne remplace pas votre ReShade.ini.
 
-SOURCES / LICENCES
-CyRSAssistant by Cyberalien - GPL-3.0-only. See LICENSE and THIRD_PARTY.md
-in this folder, licenses/, and the licenses in ../CyRSAssistantRuntime/.
-Source code and build instructions for this version:
-https://github.com/MrMybal/CyRSAssistant/tree/v{VERSION}
-https://github.com/MrMybal/CyRSAssistant/archive/refs/tags/v{VERSION}.zip
+SOURCES AND LICENSES
+CyRSAssistant by Cyberalien - GPL-3.0-only. Full license texts, runtime
+notices and source references are in ../LICENCES/ at the ZIP root.
+Keep that folder with the installed product. DXC notices also remain
+beside its DLLs. Third-party components retain their original licenses.
+CyToolsCore and CyUEMCPSDK are not bundled or required.
+
+Keep CyRSAssistant-{VERSION}.zip alongside this install ZIP; its source/
+folder contains the corresponding sources and build instructions.
+Official repository: https://github.com/MrMybal/CyRSAssistant
+
+UPDATING AND ROLLING BACK
+Close the game. Back up the previous add-on, companion, runtime and notices.
+Merge the new files into the game folder. Do not delete CyRSAssistant/library/,
+ReShade.ini, presets or generated shaders. Their formats are unchanged.
+Restore the previous binaries and runtime together to roll back.
+Closing the game ends the in-memory chat, as in previous versions.
 """
 
 
@@ -79,6 +139,7 @@ def package(install=False):
     service = binary.with_name("CyRSAssistantCompanion.exe")
     if not binary.is_file() or not service.is_file():
         raise SystemExit("Build the add-on and companion first: tools/build.py and tools/build_service.py")
+    validate_delivery(binary, service)
     suffix = "-windows-x64" if install else ""
     archive_path = ROOT / "dist" / f"CyRSAssistant-{VERSION}{suffix}.zip"
     archive_path.parent.mkdir(exist_ok=True)
@@ -95,7 +156,10 @@ def package(install=False):
         metadata.mkdir(exist_ok=True)
         for name in ("LICENSE", "THIRD_PARTY.md"):
             shutil.copy2(ROOT / name, metadata / name)
-        copy_licenses(metadata / "licenses")
+        if install:
+            notice = (metadata / "THIRD_PARTY.md").read_text(encoding="utf-8")
+            (metadata / "THIRD_PARTY.md").write_text(notice.replace("(LICENCES/", "(../LICENCES/"), encoding="utf-8")
+        copy_licenses(destination / "LICENCES")
         shutil.copy2(ROOT / "tools/dependencies.lock.json", metadata / "dependencies.lock.json")
         if install:
             (metadata / "INSTALL.txt").write_text(installation_notes(), encoding="utf-8")
@@ -109,7 +173,7 @@ def package(install=False):
                 (destination / name).write_text(f'import runpy\nrunpy.run_module("{module}", run_name="__main__")\n', encoding="utf-8")
             sources = destination / "source"
             sources.mkdir()
-            for name in ("src", "companion", "tools", "tests", "assets"):
+            for name in ("src", "companion", "tools", "tests", "assets", "LICENCES"):
                 shutil.copytree(ROOT / name, sources / name, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
             for name in ("CMakeLists.txt", "README.md", "README.fr.md", "LICENSE", "THIRD_PARTY.md"):
                 shutil.copy2(ROOT / name, sources / name)

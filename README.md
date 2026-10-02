@@ -8,7 +8,7 @@ English | [Français](README.fr.md)
 
 An AI assistant inside ReShade. Chat about the look you want, inspect installed effects and their actual parameters, adjust a preset, generate effects and replace selected game shaders.
 
-Version 0.7.1 is a Windows x64 prototype built against ReShade 6.8 / API 20. FX generation and temporary pixel shader replacement have been exercised in Stray with DX11 and DX12. DXIL compilation and Shader Model 6 PSO creation have also been tested on a DX12 device. Visual quality still needs evaluation in each game.
+Version 0.7.2 is a Windows x64 prototype built against ReShade 6.8 / API 20. FX generation and temporary pixel shader replacement have been exercised in Stray with DX11 and DX12. DXIL compilation and Shader Model 6 PSO creation have also been tested on a DX12 device. Visual quality still needs evaluation in each game.
 
 ## Language
 
@@ -28,7 +28,7 @@ Translations for the overlay and companion share JSON catalogs. See [Adding a la
 
 ## Get started
 
-Download **CyRSAssistant-0.7.1-windows-x64.zip** from the [0.7.1 release](https://github.com/MrMybal/CyRSAssistant/releases/tag/v0.7.1). Close the game and extract it next to the ReShade DLL, keeping the folders. The add-on, companion and runtime folder are already at the ZIP root; Python is bundled.
+Download **CyRSAssistant-0.7.2-windows-x64.zip** from the [releases page](https://github.com/MrMybal/CyRSAssistant/releases) when published, or build it locally with `python tools/package.py --install`. Close the game and extract it next to the ReShade DLL, keeping the folders. The add-on, companion and runtime folder are already at the ZIP root; Python is bundled.
 
 Read the [installation and connection guide](docs/getting-started.md). No terminal is needed for normal use from ReShade.
 
@@ -42,7 +42,7 @@ These permissions cover this add-on's tools. They do not grant a terminal or arb
 
 ## Build
 
-Requires Windows x64, Visual Studio 2022 with C++ and Windows SDK, and Python 3.11+.
+Requires Windows x64, Visual Studio 2022 with C++ and Windows SDK. The companion distribution uses Python 3.11.5 and PyInstaller 6.20.0; use Python 3.11.5 to create `build/packaging-env`. The build verifies the interpreter and matching license texts before freezing.
 
 ```powershell
 python tools/bootstrap.py
@@ -54,7 +54,7 @@ python -m unittest discover -s tests -p 'test_*.py'
 python tools/package.py
 ```
 
-For the ready-to-install ZIP, run `python tools/package.py --install`; it writes `dist/CyRSAssistant-0.7.1-windows-x64.zip`. The default command produces `dist/CyRSAssistant-0.7.1.zip` with sources and developer tools. Dependencies use pinned versions and checksums from their official projects. CyGameCapture and CyGPUInspector are not dependencies.
+For the ready-to-install ZIP, run `python tools/package.py --install`; it writes `dist/CyRSAssistant-0.7.2-windows-x64.zip`. The default command produces `dist/CyRSAssistant-0.7.2.zip` with sources and developer tools. Dependencies use pinned versions and checksums from their official projects. CyGameCapture and CyGPUInspector are not dependencies.
 
 ## Current limits
 
@@ -72,4 +72,4 @@ The API key stays in memory for the current session. Provider, model, endpoint, 
 
 ## License
 
-CyRSAssistant by Cyberalien is licensed under GPL-3.0-only. See [LICENSE](LICENSE) and [THIRD_PARTY.md](THIRD_PARTY.md) for dependency licenses.
+CyRSAssistant by Cyberalien is licensed under GPL-3.0-only. See [LICENSE](LICENSE), [THIRD_PARTY.md](THIRD_PARTY.md) and [LICENCES/SOURCES.txt](LICENCES/SOURCES.txt). Every distribution includes the complete license folder at its root. See [installation and rollback](docs/getting-started.md#updating-and-rolling-back) before updating an existing game.

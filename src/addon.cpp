@@ -18,7 +18,7 @@
 #include <filesystem>
 
 extern "C" __declspec(dllexport) const char *NAME = "CyRSAssistant";
-extern "C" __declspec(dllexport) const char *DESCRIPTION = "CyRSAssistant 0.7.1 - Cyberalien - Live shader assistant.";
+extern "C" __declspec(dllexport) const char *DESCRIPTION = "CyRSAssistant 0.7.2 - Cyberalien - Live shader assistant.";
 
 namespace {
 using namespace cyrs;
@@ -621,7 +621,7 @@ void overlay(effect_runtime *runtime) {
             ImGui::SameLine();
         }
         ImGui::BeginGroup();
-        ImGui::Text("CyRSAssistant 0.7.1 - %s", tr("AI chat"));
+        ImGui::Text("CyRSAssistant 0.7.2 - %s", tr("AI chat"));
         auto &c = s.connection;
         const bool ready = connected(c);
         const bool lost = c.wanted && GetTickCount64() - (c.heartbeat ? c.heartbeat : c.started) >= 10000;

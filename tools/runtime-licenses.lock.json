@@ -1,0 +1,37 @@
+{
+  "python": "3.11.5",
+  "pyinstaller": "6.20.0",
+  "openssl": "OpenSSL 3.0.9 30 May 2023",
+  "expat": "expat_2.5.0",
+  "zlib": "1.2.13",
+  "notices": {
+    "OpenSSL.txt": {
+      "url": "https://raw.githubusercontent.com/openssl/openssl/openssl-3.0.9/LICENSE.txt",
+      "sha256": "7d5450cb2d142651b8afa315b5f238efc805dad827d91ba367d8516bc9d49e7a"
+    },
+    "Expat.txt": {
+      "url": "https://raw.githubusercontent.com/libexpat/libexpat/R_2_5_0/expat/COPYING",
+      "sha256": "122f2c27000472a201d337b9b31f7eb2b52d091b02857061a8880371612d9534"
+    },
+    "XZ.txt": {
+      "url": "https://raw.githubusercontent.com/python/cpython-source-deps/xz-5.2.5/COPYING",
+      "sha256": "bcb02973ef6e87ea73d331b3a80df7748407f17efdb784b61b47e0e610d3bb5c"
+    },
+    "zlib.txt": {
+      "url": "https://raw.githubusercontent.com/madler/zlib/v1.2.13/LICENSE",
+      "sha256": "845efc77857d485d91fb3e0b884aaa929368c717ae8186b66fe1ed2495753243"
+    },
+    "libffi.txt": {
+      "url": "https://raw.githubusercontent.com/python/cpython-source-deps/libffi-3.4.4/LICENSE",
+      "sha256": "2c9c2acb9743e6b007b91350475308aee44691d96aa20eacef8e199988c8c388"
+    },
+    "bzip2.txt": {
+      "url": "https://raw.githubusercontent.com/python/cpython-source-deps/bzip2-1.0.8/LICENSE",
+      "sha256": "c6dbbf828498be844a89eaa3b84adbab3199e342eb5cb2ed2f0d4ba7ec0f38a3"
+    },
+    "Microsoft-Visual-C-Runtime.docx": {
+      "url": "https://visualstudio.microsoft.com/wp-content/uploads/2021/09/Visual-C-Runtime-2015-2022-License-1.docx",
+      "sha256": "f1e3d56ceb2ad68aae0711b910375009e651ac5530fa0760f0dea6e81e54fae1"
+    }
+  }
+}

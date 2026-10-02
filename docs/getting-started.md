@@ -4,7 +4,7 @@ English | [Français](getting-started.fr.md)
 
 Use a Windows x64 game with ReShade 6.8 and full add-on support. This prototype targets API 20 and the ImGui 1.92.5 bridge; other versions require verification.
 
-1. Copy `CyRSAssistant.addon64`, `CyRSAssistantCompanion.exe` and the complete `CyRSAssistantRuntime` folder next to ReShade, then restart the game.
+1. Copy `CyRSAssistant.addon64`, `CyRSAssistantCompanion.exe` and the complete `CyRSAssistantRuntime`, `CyRSAssistant` and `LICENCES` folders next to ReShade, then restart the game.
 2. Open **CyRSAssistant** in the ReShade overlay. The interface starts in English. Select **Options > Language > Français** for French.
 3. In **Connection**, select **Codex**, **Claude Code**, **OpenAI-compatible API** or **Local model**.
 4. CLI providers use an existing login. If needed, run `codex login` or `claude auth login` once outside the game. Leave Model empty to use the CLI default. For an API, enter the full `/chat/completions` URL, model and optional API key.
@@ -51,3 +51,13 @@ python -m companion import catalogue-portable.json
 Set `CYRS_API_URL`, `CYRS_MODEL` and optionally `CYRS_API_KEY` in the process environment for CLI model requests. HTTPS is required except for localhost. The endpoint must support Chat Completions with JSON responses. Do not run the legacy `watch` command alongside the integrated service.
 
 If multiple games are running, supply `--pipe` and, if needed, `--runtime` before the subcommand. Use the actual pipe and runtime reported by the add-on. MCP clients can start `python -m companion.mcp`; add `--allow-write` only for write access. See [protocol details](protocol.md) and the [extended French guide](getting-started.fr.md) for advanced commands and catalog behavior.
+
+## Updating and rolling back
+
+Close the game before replacing add-on files. Back up `CyRSAssistant.addon64`, `CyRSAssistantCompanion.exe`, `CyRSAssistantRuntime/`, the installed license notices and your existing ReShade configuration. Extract the new ZIP into the same folder, preserving all subdirectories, including the root `LICENCES/` folder.
+
+The ZIP does not include or replace `ReShade.ini`, presets, generated shader files, provider credentials or the `CyRSAssistant/library/` catalog. Merge the `CyRSAssistant/` metadata directory; do not delete an existing directory containing your library. Provider, model, endpoint, language and permission settings keep their existing format. Closing the game still ends the in-memory conversation, as in earlier versions.
+
+To roll back, close the game and restore the previous add-on, companion, runtime and notices together. Keep the current user configuration and library; this update does not migrate their formats. Keep the developer ZIP with the same version as the install ZIP to retain the matching source code.
+
+The companion is self-contained. CyToolsCore and CyUEMCPSDK are not runtime dependencies. License documents and runtime notices are in English.

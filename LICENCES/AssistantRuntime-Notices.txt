@@ -1,0 +1,27 @@
+CyRSAssistant assistant runtime notices
+
+The companion is a private, self-contained Windows x64 executable.
+It contains CyRSAssistant code (GPL-3.0-only), CPython 3.11.5, the
+PyInstaller 6.20.0 bootloader and its required Python runtime hooks.
+
+Component                         Full notice in this folder
+CyRSAssistant                     CyRSAssistant-GPL-3.0.txt
+Python 3.11.5                     Python.txt
+PyInstaller 6.20.0                PyInstaller.txt (including bootloader exception
+                                  and Apache-2.0 runtime-hook terms)
+OpenSSL 3.0.9                     OpenSSL.txt
+Expat 2.5.0                       Expat.txt
+zlib 1.2.13                       zlib.txt
+libffi 3.4.4                      libffi.txt
+bzip2 1.0.8                       bzip2.txt
+XZ/liblzma 5.2.5                  XZ.txt (liblzma; XZ command-line tools are not shipped)
+Microsoft Windows C/C++ runtimes  Microsoft-Windows-Runtime.txt
+
+Python.txt also includes the Python distribution's original historical and
+third-party notices. Embedded modules retain their original copyrights.
+The PyInstaller bootloader exception does not change CyRSAssistant's own license.
+
+CyToolsCore and CyUEMCPSDK are not included. This product uses its own
+ReShade bridge and companion; there is no shared Unreal assistant bundle.
+Provider CLIs, model weights and user credentials are not part of this package.
+See SOURCES.txt for upstream source code and integration references.

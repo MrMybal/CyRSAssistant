@@ -1,14 +1,18 @@
-# Composants tiers
+# Third-party components
 
-Les licences originales sont conservées dans le paquet distribué.
+The complete license texts are in `LICENCES/` at the root of both ZIP distributions. See [SOURCES.txt](LICENCES/SOURCES.txt) for upstream sources and [AssistantRuntime-Notices.txt](LICENCES/AssistantRuntime-Notices.txt) for the frozen companion's components.
 
-| Composant | Utilisation | Licence livrée |
+| Component | Use | Included notice |
 | --- | --- | --- |
-| ReShade 6.8.0 | API add-on et pont ImGui | licenses/ReShade.txt |
-| Dear ImGui 1.92.5-docking | Interface | licenses/DearImGui.txt |
-| nlohmann/json 3.12.0 | Protocole JSON | licenses/nlohmann-json.txt |
-| Microsoft DirectX Shader Compiler 1.8.2505.32 | Compilation et validation DXIL | CyRSAssistantRuntime/LICENSE-LLVM.txt et LICENSE-MS.txt |
-| Python 3.11 | Compagnon autonome | licenses/Python.txt |
-| PyInstaller 6.20.0 | Lanceur du compagnon | licenses/PyInstaller.txt |
+| ReShade 6.8.0 | Add-on API and ImGui bridge | LICENCES/ReShade.txt |
+| Dear ImGui 1.92.5-docking | Overlay interface | LICENCES/DearImGui.txt |
+| nlohmann/json 3.12.0 | JSON protocol | LICENCES/nlohmann-json.txt |
+| Microsoft DXC 1.8.2505.32 | DXIL compilation and validation | LICENCES/DXC-LLVM.txt, LICENCES/DXC-Microsoft.txt |
+| Python 3.11.5 and its bundled libraries | Standalone companion | LICENCES/Python.txt, LICENCES/AssistantRuntime-Notices.txt |
+| PyInstaller 6.20.0 | Companion bootloader and runtime hooks | LICENCES/PyInstaller.txt |
 
-Les sources de CyRSAssistant sont sous GPL-3.0-only. Les composants tiers restent soumis à leurs propres licences. Les versions et empreintes de téléchargement des dépendances natives sont définies dans les scripts bootstrap et leur fichier de verrouillage.
+CyRSAssistant remains GPL-3.0-only. Third-party components retain their own licenses. Native dependency downloads are pinned in the bootstrap scripts and `tools/dependencies.lock.json`. The frozen Python runtime and additional upstream notices are pinned in `tools/runtime-licenses.lock.json`.
+
+CyToolsCore and CyUEMCPSDK are not included or required by this ReShade add-on. The companion, transport and MCP interface are implemented by CyRSAssistant. The Cy SDKs' MIT licensing does not change this product's license.
+
+The DXC notices also remain alongside its DLLs in `CyRSAssistantRuntime/`. In the install ZIP, this document and the original product `LICENSE` are in `CyRSAssistant/`; their central notices folder is `../LICENCES/`.

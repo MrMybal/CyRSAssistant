@@ -1,0 +1,38 @@
+CyRSAssistant - sources and license references
+
+Product sources and build instructions (GPL-3.0-only):
+https://github.com/MrMybal/CyRSAssistant
+https://github.com/MrMybal/CyRSAssistant/blob/main/README.md
+The corresponding developer ZIP is supplied alongside the install ZIP;
+its source/ folder contains the product sources and build scripts.
+Use the developer ZIP with the same version as the installed add-on.
+
+Distributed dependencies:
+ReShade 6.8.0: https://github.com/crosire/reshade/tree/v6.8.0
+Dear ImGui 1.92.5-docking: https://github.com/ocornut/imgui/tree/v1.92.5-docking
+nlohmann/json 3.12.0: https://github.com/nlohmann/json/tree/v3.12.0
+Microsoft DXC 1.8.2505.32:
+https://www.nuget.org/packages/Microsoft.Direct3D.DXC/1.8.2505.32
+https://github.com/microsoft/DirectXShaderCompiler
+Python 3.11.5: https://github.com/python/cpython/tree/v3.11.5
+Python 3.11.5 Windows dependencies:
+https://github.com/python/cpython/blob/v3.11.5/PCbuild/get_externals.bat
+PyInstaller 6.20.0: https://github.com/pyinstaller/pyinstaller/tree/v6.20.0
+OpenSSL 3.0.9: https://github.com/openssl/openssl/tree/openssl-3.0.9
+Expat 2.5.0: https://github.com/libexpat/libexpat/tree/R_2_5_0
+zlib 1.2.13: https://github.com/madler/zlib/tree/v1.2.13
+libffi 3.4.4: https://github.com/python/cpython-source-deps/tree/libffi-3.4.4
+bzip2 1.0.8: https://github.com/python/cpython-source-deps/tree/bzip2-1.0.8
+XZ/liblzma 5.2.5: https://github.com/python/cpython-source-deps/tree/xz-5.2.5
+Microsoft C/C++ runtimes:
+https://visualstudio.microsoft.com/license-terms/vs2022-cruntime/
+
+Cy integration references only (neither SDK is bundled or required):
+CyToolsCore: https://github.com/MrMybal/CyToolsCore
+https://github.com/MrMybal/CyToolsCore/blob/main/Docs/AgentGuide.md
+https://github.com/MrMybal/CyToolsCore/blob/main/Docs/UpdateExistingProducts.md
+CyUEMCPSDK: https://github.com/MrMybal/CyUEMCPSDK
+https://github.com/MrMybal/CyUEMCPSDK/blob/main/Docs/UpdateExistingPlugin.md
+
+These links supplement the complete license texts supplied in LICENCES.
+They do not replace the included copyright and license notices.

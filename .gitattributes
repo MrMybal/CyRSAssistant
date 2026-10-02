@@ -4,3 +4,6 @@
 *.hpp text eol=lf
 *.md text eol=lf
 *.yml text eol=lf
+
+# Preserve the exact bytes of upstream license documents.
+LICENCES/** -text -whitespace

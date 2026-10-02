@@ -8,7 +8,7 @@
 
 Assistant intégré à ReShade : décrire le rendu souhaité, exploiter les effets installés, régler un preset en direct et créer des effets adaptés. Les capacités avancées visent l'inspection du rendu, le masquage du HUD et le remplacement ciblé de shaders du jeu.
 
-État : prototype 0.7.1 Windows x64, compilé avec ReShade 6.8 / API 20. Génération FX et remplacement temporaire de pixel shaders testés dans Stray en DX11 et DX12. Compilation DXIL et création de PSO Shader Model 6 testées sur un périphérique DX12. La qualité du rendu pendant une partie reste à évaluer.
+État : prototype 0.7.2 Windows x64, compilé avec ReShade 6.8 / API 20. Génération FX et remplacement temporaire de pixel shaders testés dans Stray en DX11 et DX12. Compilation DXIL et création de PSO Shader Model 6 testées sur un périphérique DX12. La qualité du rendu pendant une partie reste à évaluer.
 
 ## Langue
 
@@ -28,13 +28,13 @@ Pour ajouter une langue, voir [le guide de traduction](docs/localization.md).
 
 ## Démarrage
 
-Téléchargez **CyRSAssistant-0.7.1-windows-x64.zip** depuis la [release 0.7.1](https://github.com/MrMybal/CyRSAssistant/releases/tag/v0.7.1). Fermez le jeu et extrayez le ZIP à côté de la DLL ReShade, en conservant les sous-dossiers. Les fichiers de l’add-on sont directement à la racine du ZIP et Python est intégré.
+Téléchargez **CyRSAssistant-0.7.2-windows-x64.zip** depuis les [releases](https://github.com/MrMybal/CyRSAssistant/releases) une fois publiée, ou produisez-le localement avec `python tools/package.py --install`. Fermez le jeu et extrayez le ZIP à côté de la DLL ReShade, en conservant les sous-dossiers. Les fichiers de l’add-on sont directement à la racine du ZIP et Python est intégré.
 
 Pour produire ce ZIP : `python tools/package.py --install`.
 
-Voir [le guide d'installation et de connexion](docs/getting-started.fr.md). Le paquet avec sources est produit dans `dist/CyRSAssistant-0.7.1.zip` avec `python tools/package.py`.
+Voir [le guide d'installation et de connexion](docs/getting-started.fr.md). Le paquet avec sources est produit dans `dist/CyRSAssistant-0.7.2.zip` avec `python tools/package.py`.
 
-Compilation depuis les sources (Visual Studio 2022 C++, Windows SDK et Python 3.11+) :
+Compilation depuis les sources (Visual Studio 2022 C++, Windows SDK et Python 3.11.5 pour créer `build/packaging-env`) :
 
 ```powershell
 python tools/bootstrap.py
@@ -74,7 +74,7 @@ Le panneau conserve les 32 derniers messages en mémoire, avec copie du texte, a
 
 ## Licence
 
-CyRSAssistant — Cyberalien. Distribué sous GPL-3.0-only ; voir [LICENSE](LICENSE). Les composants tiers conservent leurs licences, listées dans [THIRD_PARTY.md](THIRD_PARTY.md).
+CyRSAssistant by Cyberalien remains GPL-3.0-only; see [LICENSE](LICENSE). Third-party notices and sources are in [THIRD_PARTY.md](THIRD_PARTY.md) and [LICENCES](LICENCES/SOURCES.txt), included at the root of every distribution. License texts and notices are provided in English.
 
 ## Autorisations
 

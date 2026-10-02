@@ -4,7 +4,7 @@
 
 L’interface démarre en anglais. Dans **Options > Language**, choisissez **Français** pour retrouver les libellés de ce guide. Ce choix est mémorisé par jeu, sans effacer la conversation.
 
-Copiez `CyRSAssistant.addon64`, `CyRSAssistantCompanion.exe` **et le dossier** `CyRSAssistantRuntime` à côté de ReShade, puis redémarrez le jeu. Dans l’onglet CyRSAssistant :
+Copiez `CyRSAssistant.addon64`, `CyRSAssistantCompanion.exe` **et les dossiers** `CyRSAssistantRuntime`, `CyRSAssistant` et `LICENCES` à côté de ReShade, puis redémarrez le jeu. Dans l’onglet CyRSAssistant :
 
 1. Ouvrez le sous-onglet **Connexion**, puis choisissez **Codex**, **Claude Code**, **API compatible OpenAI** ou **Modèle local**.
 2. Pour les CLI, utilisez votre session existante (au besoin, connectez-vous une fois avec `codex login` ou `claude auth login`). Le modèle peut rester vide pour le modèle par défaut du CLI.
@@ -16,6 +16,14 @@ Copiez `CyRSAssistant.addon64`, `CyRSAssistantCompanion.exe` **et le dossier** `
 Le bouton d’envoi est désactivé sans connexion prête. Le service envoie un signal de présence ; après dix secondes sans signal, le panneau indique qu’il est injoignable. **Déconnecter / modifier** annule les demandes en attente avant de changer de fournisseur. Le fournisseur, l’URL et le modèle sont mémorisés dans ReShade.ini ; la clé API reste en mémoire et doit être ressaisie après le redémarrage.
 
 Codex et Claude : la vérification de connexion lit le statut officiel du CLI, sans transmettre de requête au modèle. Le premier envoi vérifie l’accès effectif. Les réponses doivent produire un plan JSON validé avant application. OpenCode et Antigravity restent accessibles par l’interface MCP ci-dessous ; leur connexion n’est pas reflétée par le statut du compagnon intégré.
+
+## Mise à jour et retour à une version précédente
+
+Fermez le jeu et sauvegardez les anciens fichiers de l'add-on, du compagnon, du runtime et leurs notices. Extrayez le nouveau ZIP en conservant ses dossiers, dont `LICENCES`. Fusionnez le dossier `CyRSAssistant` existant : il peut contenir votre catalogue dans `library/`.
+
+Le paquet ne remplace pas `ReShade.ini`, les presets, les shaders générés ni le catalogue. Les réglages fournisseur, modèle, langue et autorisations gardent leur format. Fermer le jeu termine l'historique en mémoire, comme auparavant.
+
+Pour revenir en arrière, fermez le jeu et restaurez ensemble les anciens binaires, le runtime et les notices, en conservant vos configurations et votre catalogue. Gardez le ZIP de développement de même version pour les sources correspondantes. Les textes de licence et notices sont en anglais.
 
 ## Choisir les autorisations
 

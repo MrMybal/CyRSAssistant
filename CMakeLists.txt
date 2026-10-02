@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
-project(CyRSAssistant VERSION 0.7.1 LANGUAGES CXX RC)
+project(CyRSAssistant VERSION 0.7.2 LANGUAGES CXX RC)
 if(NOT WIN32 OR NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
   message(FATAL_ERROR "CyRSAssistant requires Windows x64")
 endif()
