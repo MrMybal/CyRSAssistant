@@ -26,6 +26,18 @@ Pour ajouter une langue, voir [le guide de traduction](docs/localization.md).
 - Interface MCP locale : lecture des effets et, avec `--allow-write`, réglages, annulation et sauvegarde pour les agents compatibles.
 - Validation des types, limites annotées, générations et révisions ; rejet des commandes obsolètes et paramètres pilotés par ReShade.
 
+## Captures d’écran
+
+Captures de versions de développement antérieures, avec l’interface en français.
+
+**Tchat IA (v0.4.0)** — historique de conversation et exemple de demande d’effet.
+
+![Tchat IA de CyRSAssistant avec historique de conversation et réponse de génération d’effet](assets/screenshots/chat-preview.png)
+
+**Connexion au fournisseur** — choix du CLI et état de la session locale.
+
+![Panneau de connexion de CyRSAssistant avec Codex CLI sélectionné et une session locale reconnue](assets/screenshots/connection-preview.png)
+
 ## Démarrage
 
 Téléchargez **CyRSAssistant-0.7.1-windows-x64.zip** depuis la [release 0.7.1](https://github.com/MrMybal/CyRSAssistant/releases/tag/v0.7.1). Fermez le jeu et extrayez le ZIP à côté de la DLL ReShade, en conservant les sous-dossiers. Les fichiers de l’add-on sont directement à la racine du ZIP et Python est intégré.

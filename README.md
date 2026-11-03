@@ -26,6 +26,18 @@ Translations for the overlay and companion share JSON catalogs. See [Adding a la
 - Maintain a disk catalog with fingerprints, changes, generated descriptions and portable metadata export/import.
 - Connect external MCP clients for reads and, with `--allow-write`, supported edits.
 
+## Screenshots
+
+Screenshots from earlier development builds, with the interface in French.
+
+**AI chat (v0.4.0)** — conversation history and an example effect request.
+
+![CyRSAssistant AI chat showing conversation history and a generated effect response](assets/screenshots/chat-preview.png)
+
+**Provider connection** — CLI provider selection and local session status.
+
+![CyRSAssistant provider connection panel with Codex CLI selected and a recognized local session](assets/screenshots/connection-preview.png)
+
 ## Get started
 
 Download **CyRSAssistant-0.7.1-windows-x64.zip** from the [0.7.1 release](https://github.com/MrMybal/CyRSAssistant/releases/tag/v0.7.1). Close the game and extract it next to the ReShade DLL, keeping the folders. The add-on, companion and runtime folder are already at the ZIP root; Python is bundled.
