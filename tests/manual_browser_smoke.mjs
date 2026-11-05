@@ -35,8 +35,12 @@ const origin=online ? new URL(base).origin : null;
 // Optional host-injected antivirus origin; never set by CI.
 const injectedOrigin=process.env.BROWSER_INJECTED_ORIGIN || null;
 const profile = await mkdtemp(join(tmpdir(), 'cyrs-cydoc-browser-'));
-const child = spawn(chrome, ['--headless=new','--disable-gpu','--no-first-run','--no-default-browser-check',
-  '--remote-debugging-port=0','--user-data-dir='+profile,'--window-size=1440,1050','about:blank'], { stdio:'ignore', windowsHide:true });
+const ciFlags=process.platform==='linux' && process.env.CI ? ['--no-sandbox','--disable-dev-shm-usage'] : [];
+const child = spawn(chrome, ['--headless=new','--disable-gpu','--no-first-run','--no-default-browser-check',...ciFlags,
+  '--remote-debugging-port=0','--user-data-dir='+profile,'--window-size=1440,1050','about:blank'], { stdio:['ignore','ignore','pipe'], windowsHide:true });
+let chromeDiagnostics='', chromeError;
+child.stderr.on('data',chunk=>{chromeDiagnostics=(chromeDiagnostics+chunk.toString()).slice(-4000);});
+child.on('error',error=>{chromeError=error;});
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 let socket, sequence = 0;
 const pending = new Map(), requests = [], exceptions = [], failedResources = [], readerRequests = new Set();
@@ -58,8 +62,11 @@ async function wait(expression, timeout=15000) {
 async function navigate(url) { await call('Page.navigate',{url}); await wait("!!document.querySelector('main h1')"); }
 try {
   let port;
-  for(let i=0;i<200;i++) { try {port=(await readFile(join(profile,'DevToolsActivePort'),'utf8')).split('\n')[0];break;}catch{await sleep(50);} }
-  assert.ok(port,'Chrome did not expose a debugging endpoint');
+  for(let i=0;i<600;i++) {
+    if(chromeError || child.exitCode!==null) break;
+    try {port=(await readFile(join(profile,'DevToolsActivePort'),'utf8')).split('\n')[0];break;}catch{await sleep(50);}
+  }
+  assert.ok(port,'Chrome did not expose a debugging endpoint: '+(chromeError?.message || chromeDiagnostics));
   const target = await (await fetch('http://127.0.0.1:'+port+'/json/new?about:blank',{method:'PUT'})).json();
   socket = new WebSocket(target.webSocketDebuggerUrl);
   await new Promise((resolve,reject)=>{socket.addEventListener('open',resolve,{once:true});socket.addEventListener('error',reject,{once:true});});
