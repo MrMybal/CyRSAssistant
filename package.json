@@ -1,0 +1,19 @@
+{
+  "name": "cyrsassistant-docs",
+  "version": "0.9.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "docs:build": "python tools/build_pages.py",
+    "docs:check": "node tools/check_pages.mjs build/pages-project/site",
+    "docs:pages": "python tools/build_pages.py",
+    "docs:pages:check": "node tools/check_pages.mjs build/pages-project/site"
+  },
+  "devDependencies": {
+    "cydoc": "file:vendor/cydoc/cydoc-0.1.0.tgz",
+    "esbuild": "0.25.12"
+  }
+}

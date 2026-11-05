@@ -6,6 +6,8 @@
 
 English | [Français](README.fr.md)
 
+**[Read the complete documentation](https://mrmybal.github.io/CyRSAssistant/#/en/start)** — searchable English manual, images and diagrams. It documents development version 0.9.0; use the version shown in the manual when comparing with a release. Offline help remains included in application packages.
+
 An AI assistant inside ReShade. Chat about the look you want, inspect installed effects and their actual parameters, adjust a preset, generate effects and replace selected game shaders.
 
 Version 0.7.1 is a Windows x64 prototype built against ReShade 6.8 / API 20. FX generation and temporary pixel shader replacement have been exercised in Stray with DX11 and DX12. DXIL compilation and Shader Model 6 PSO creation have also been tested on a DX12 device. Visual quality still needs evaluation in each game.

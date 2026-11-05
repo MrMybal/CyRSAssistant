@@ -12,3 +12,7 @@ Les licences originales sont conservées dans le paquet distribué.
 | PyInstaller 6.20.0 | Lanceur du compagnon | licenses/PyInstaller.txt |
 
 Les sources de CyRSAssistant sont sous GPL-3.0-only. Les composants tiers restent soumis à leurs propres licences. Les versions et empreintes de téléchargement des dépendances natives sont définies dans les scripts bootstrap et leur fichier de verrouillage.
+
+## Documentation reader
+
+CyDoc 0.1.0 is used to build the English and French documentation. Its MIT notice is in [LICENCES/CyDoc.txt](LICENCES/CyDoc.txt) and in the exported reader. The package is pinned by commit and SHA-256 in tools/cydoc.lock.json. Only the image module is included in the reader; Three.js is not required.
