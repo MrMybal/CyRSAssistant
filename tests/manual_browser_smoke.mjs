@@ -1,6 +1,6 @@
 // Chrome smoke test of the complete file:// or HTTP(S) CyDoc export. No browser driver dependency.
 import { spawn } from 'node:child_process';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -8,6 +8,8 @@ import { createServer } from 'node:http';
 import assert from 'node:assert/strict';
 const chrome = process.env.CHROME_PATH || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const argument = process.argv[2] || 'build/help';
+const readmeLocale = process.argv.find(arg=>arg.startsWith('--readme='))?.split('=')[1];
+if (readmeLocale) assert.ok(['en','fr'].includes(readmeLocale), 'README locale must be en or fr');
 const remote = /^https?:/.test(argument);
 const output = remote ? null : resolve(argument);
 let server;
@@ -37,7 +39,7 @@ const child = spawn(chrome, ['--headless=new','--disable-gpu','--no-first-run','
   '--remote-debugging-port=0','--user-data-dir='+profile,'--window-size=1440,1050','about:blank'], { stdio:'ignore', windowsHide:true });
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 let socket, sequence = 0;
-const pending = new Map(), requests = [], exceptions = [], failedResources = [];
+const pending = new Map(), requests = [], exceptions = [], failedResources = [], readerRequests = new Set();
 async function call(method, params={}) {
   const id = ++sequence;
   return new Promise((resolve,reject) => { pending.set(id,{resolve,reject}); socket.send(JSON.stringify({id,method,params})); });
@@ -47,10 +49,11 @@ async function evaluate(expression) {
   if(result.exceptionDetails) throw Error(result.exceptionDetails.text+': '+result.exceptionDetails.exception?.description);
   return result.result?.value;
 }
-async function wait(expression) {
-  const until=Date.now()+8000;
+async function wait(expression, timeout=15000) {
+  const until=Date.now()+timeout;
   while(Date.now()<until) { if(await evaluate(expression)) return; await sleep(80); }
-  throw Error('Timed out: '+expression);
+  const state=await evaluate('JSON.stringify({url:location.href,title:document.title,heading:document.querySelector("main h1")?.textContent})');
+  throw Error('Timed out: '+expression+'; state='+state);
 }
 async function navigate(url) { await call('Page.navigate',{url}); await wait("!!document.querySelector('main h1')"); }
 try {
@@ -63,13 +66,36 @@ try {
   socket.addEventListener('message',event=>{
     const item=JSON.parse(event.data);
     if(item.id) { const promise=pending.get(item.id); pending.delete(item.id); item.error ? promise?.reject(Error(JSON.stringify(item.error))) : promise?.resolve(item.result); }
-    if(item.method==='Network.requestWillBeSent') requests.push(item.params.request.url);
-    if(item.method==='Network.responseReceived' && item.params.response.status>=400) failedResources.push(item.params.response.url+': '+item.params.response.status);
+    if(item.method==='Network.requestWillBeSent' && (!readmeLocale || item.params.documentURL?.startsWith(origin+'/'))) { requests.push(item.params.request.url);readerRequests.add(item.params.requestId); }
+    if(item.method==='Network.responseReceived' && (!readmeLocale || readerRequests.has(item.params.requestId)) && item.params.response.status>=400) failedResources.push(item.params.response.url+': '+item.params.response.status);
     if(item.method==='Runtime.exceptionThrown') exceptions.push(item.params.exceptionDetails.text+': '+item.params.exceptionDetails.exception?.description);
   });
   await call('Page.enable'); await call('Runtime.enable'); await call('Network.enable');
   if(!online) await call('Network.setBlockedURLs',{urls:['http://*','https://*']});
-  await navigate(base);
+  await mkdir(resolve('build'),{recursive:true});
+  if (readmeLocale) {
+    assert.ok(online, 'The README journey requires the public site URL');
+    const readmeUrl='https://github.com/MrMybal/CyRSAssistant'+(readmeLocale==='fr' ? '/blob/main/README.fr.md' : '');
+    const expected=new URL('.',base).href+'#/'+readmeLocale+'/start';
+    await call('Page.navigate',{url:readmeUrl});
+    const selector='.markdown-body a[href='+JSON.stringify(expected)+']';
+    await wait('!!document.querySelector('+JSON.stringify(selector)+')',30000);
+    const link=await evaluate('(()=>{const a=document.querySelector('+JSON.stringify(selector)+');a.scrollIntoView({block:"center",behavior:"instant"});return {text:a.textContent,href:a.href,target:a.target};})()');
+    assert.ok(link.target==='' || link.target==='_self', 'Unexpected README link target');
+    console.log('Clicking published README ['+readmeLocale+']: '+link.text+' -> '+link.href);
+    const before=await call('Page.captureScreenshot',{format:'png'});
+    await writeFile(resolve('build/readme-'+readmeLocale+'.png'),Buffer.from(before.data,'base64'));
+    requests.length=0;failedResources.length=0;exceptions.length=0;readerRequests.clear();
+    await evaluate('document.querySelector('+JSON.stringify(selector)+').click()');
+    await wait('location.href==='+JSON.stringify(expected)+' && !!document.querySelector("#app main h1")',30000);
+    assert.equal(await evaluate('document.documentElement.lang'),readmeLocale);
+    assert.ok(await evaluate('!!document.querySelector(".locale-control select") && !!document.querySelector(".search-form")'));
+    console.log('PASS: actual README click opened the HTML reader in '+readmeLocale);
+    if(readmeLocale==='fr') {
+      await evaluate("var locale=document.querySelector('.locale-control select');locale.value='en';locale.dispatchEvent(new Event('change',{bubbles:true}))");
+      await wait("document.documentElement.lang==='en' && location.hash==='#/en/start'");
+    }
+  } else await navigate(base);
   assert.equal(await evaluate('document.documentElement.lang'),'en');
   assert.equal(await evaluate("document.querySelector('#app').dataset.theme"),'nord');
   assert.ok(await evaluate("document.querySelector('main h1').textContent.includes('Start here')"));
@@ -123,7 +149,7 @@ try {
   await evaluate("location.hash='#/fr/create'");await wait("!!document.querySelector('main .diagram')");
   await evaluate("scrollTo({top:0,behavior:'instant'})");await sleep(150);
   const shot=await call('Page.captureScreenshot',{format:'png'});
-  await writeFile(resolve('build/cydoc-reader-fr.png'),Buffer.from(shot.data,'base64'));
+  await writeFile(resolve(readmeLocale ? 'build/cydoc-reader-from-readme-'+readmeLocale+'.png' : 'build/cydoc-reader-fr.png'),Buffer.from(shot.data,'base64'));
   const injected=requests.filter(url=>/^https?:/.test(url) && new URL(url).origin===injectedOrigin);
   if(injected.length) console.log('Host-injected antivirus requests excluded: '+injected.length);
   assert.deepEqual(requests.filter(url=>/^https?:/.test(url) && new URL(url).origin!==injectedOrigin && (!online || new URL(url).origin!==origin)),[]);
