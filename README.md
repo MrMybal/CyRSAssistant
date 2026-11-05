@@ -6,7 +6,7 @@
 
 English | [Français](README.fr.md)
 
-**[Read the complete documentation](https://mrmybal.github.io/CyRSAssistant/#/en/start)** — searchable English manual, images and diagrams. It documents development version 0.9.0; use the version shown in the manual when comparing with a release. Offline help remains included in application packages.
+**[Documentation](https://mrmybal.github.io/CyRSAssistant/#/en/start)** — searchable English manual, images and diagrams. It documents development version 0.9.0; use the version shown in the manual when comparing with a release. Offline help remains included in application packages.
 
 An AI assistant inside ReShade. Chat about the look you want, inspect installed effects and their actual parameters, adjust a preset, generate effects and replace selected game shaders.
 

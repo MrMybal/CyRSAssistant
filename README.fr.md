@@ -6,7 +6,7 @@
 
 [English](README.md) | Français
 
-**[Consulter la documentation complète](https://mrmybal.github.io/CyRSAssistant/#/fr/start)** — manuel français avec recherche, images et schémas. Il décrit la version de développement 0.9.0 ; vérifiez la version indiquée pour comparer avec une release. L’aide hors ligne reste incluse dans les paquets de l’application.
+**[Documentation](https://mrmybal.github.io/CyRSAssistant/#/fr/start)** — manuel français avec recherche, images et schémas. Il décrit la version de développement 0.9.0 ; vérifiez la version indiquée pour comparer avec une release. L’aide hors ligne reste incluse dans les paquets de l’application.
 
 Assistant intégré à ReShade : décrire le rendu souhaité, exploiter les effets installés, régler un preset en direct et créer des effets adaptés. Les capacités avancées visent l'inspection du rendu, le masquage du HUD et le remplacement ciblé de shaders du jeu.
 
