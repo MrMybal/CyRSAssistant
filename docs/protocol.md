@@ -80,3 +80,7 @@ Les mutations de l'assistant en mode a la demande exigent `permission_id` et le 
 `get_state.language` and `get_connection.connection.language` expose the saved interface language code. English (`en`) is the default; French (`fr`) is included. `set_language` takes `runtime`, `session` and `language`, returns the resolved language code and persists it to ReShade.ini. Unsupported codes fall back to English; supported regional codes resolve to their base language.
 
 Changing language does not modify rendering revisions, conversation contents, connection epochs, pending requests or permission tokens. It is a local UI setting and is not exposed as an assistant tool. New provider requests use the selected response language; a request already running retains its original language. See [localization](localization.md) for catalog and build details.
+
+## Offline help (0.8.0)
+
+Local UI-control commands, not AI/MCP rendering tools: get_help_state(runtime) reads the selected manual chapter, resolved language, open state and illustration-load status. open_help(runtime, session, chapter?, query?, open?) opens the embedded help window on a validated chapter ID with an optional bounded search query, or closes that window with open=false. It does not run a provider request or mutate rendering revisions, permissions or conversation. The same per-runtime help state backs the Help tab and its optional separate window.

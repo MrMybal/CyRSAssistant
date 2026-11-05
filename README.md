@@ -8,7 +8,13 @@ English | [Français](README.fr.md)
 
 An AI assistant inside ReShade. Chat about the look you want, inspect installed effects and their actual parameters, adjust a preset, generate effects and replace selected game shaders.
 
-Version 0.7.2 is a Windows x64 prototype built against ReShade 6.8 / API 20. FX generation and temporary pixel shader replacement have been exercised in Stray with DX11 and DX12. DXIL compilation and Shader Model 6 PSO creation have also been tested on a DX12 device. Visual quality still needs evaluation in each game.
+Version 0.8.0 is a Windows x64 prototype built against ReShade 6.8 / API 20. FX generation and temporary pixel shader replacement have been exercised in Stray with DX11 and DX12. DXIL compilation and Shader Model 6 PSO creation have also been tested on a DX12 device. Visual quality still needs evaluation in each game.
+
+## Built-in illustrated help
+
+Open **CyRSAssistant > Help** for the complete offline manual. It follows **Options > Language**, defaults to English and includes French. Search 21 chapters covering installation, providers, chat, permissions, effects, FX generation/replacement, DX11/DX12, the catalog, captures, CLI/MCP, privacy, troubleshooting and rollback. Illustrations can be enlarged; diagrams explain the workflows. Adjust the manual text size or open a separate Help window to read beside the tools.
+
+**Open illustrated manual** opens the matching offline HTML edition in your browser, with search, language links and printing. Keep the complete `CyRSAssistant/Documentation` folder from the install ZIP. Embedded text, figures and diagrams remain available in ReShade even if that folder is missing.
 
 ## Language
 
@@ -40,7 +46,7 @@ Screenshots from earlier development builds, with the interface in French.
 
 ## Get started
 
-Download **CyRSAssistant-0.7.2-windows-x64.zip** from the [releases page](https://github.com/MrMybal/CyRSAssistant/releases) when published, or build it locally with `python tools/package.py --install`. Close the game and extract it next to the ReShade DLL, keeping the folders. The add-on, companion and runtime folder are already at the ZIP root; Python is bundled.
+Download **CyRSAssistant-0.8.0-windows-x64.zip** from the [releases page](https://github.com/MrMybal/CyRSAssistant/releases) when published, or build it locally with `python tools/package.py --install`. Close the game and extract it next to the ReShade DLL, keeping the folders. The add-on, companion and runtime folder are already at the ZIP root; Python is bundled.
 
 Read the [installation and connection guide](docs/getting-started.md). No terminal is needed for normal use from ReShade.
 
@@ -66,7 +72,7 @@ python -m unittest discover -s tests -p 'test_*.py'
 python tools/package.py
 ```
 
-For the ready-to-install ZIP, run `python tools/package.py --install`; it writes `dist/CyRSAssistant-0.7.2-windows-x64.zip`. The default command produces `dist/CyRSAssistant-0.7.2.zip` with sources and developer tools. Dependencies use pinned versions and checksums from their official projects. CyGameCapture and CyGPUInspector are not dependencies.
+For the ready-to-install ZIP, run `python tools/package.py --install`; it writes `dist/CyRSAssistant-0.8.0-windows-x64.zip`. The default command produces `dist/CyRSAssistant-0.8.0.zip` with sources and developer tools. Dependencies use pinned versions and checksums from their official projects. CyGameCapture and CyGPUInspector are not dependencies.
 
 ## Current limits
 

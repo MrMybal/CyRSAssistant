@@ -22,6 +22,9 @@ class PackagingTests(unittest.TestCase):
         for folder in ("src", "companion", "tools", "tests", "assets", "docs"):
             (self.root / folder).mkdir()
             (self.root / folder / "example.txt").write_text("example")
+        shutil.copytree(source / "docs/manual", self.root / "docs/manual")
+        shutil.copytree(source / "assets/screenshots", self.root / "assets/screenshots")
+        shutil.copyfile(source / "assets/cyrsassistant-logo-turquoise.png", self.root / "assets/cyrsassistant-logo-turquoise.png")
         for name in ("LICENSE", "THIRD_PARTY.md", "README.md", "README.fr.md", "CMakeLists.txt"):
             shutil.copyfile(source / name, self.root / name)
         for name in ("runtime-licenses.lock.json", "dependencies.lock.json"):
@@ -71,6 +74,12 @@ class PackagingTests(unittest.TestCase):
             self.assertIn("FRAN\u00c7AIS", archive.read("CyRSAssistant/INSTALL.txt").decode("utf-8"))
             self.assertIn("LICENCES/AssistantRuntime-Notices.txt", archive.namelist())
             self.assertNotIn("CyRSAssistantCompanion.build.json", archive.namelist())
+            for language in ("en", "fr"):
+                page = "CyRSAssistant/Documentation/index." + language + ".html"
+                self.assertIn(page, archive.namelist())
+                self.assertIn(('lang="' + language + '"').encode(), archive.read(page))
+            self.assertIn("CyRSAssistant/Documentation/assets/chat.png", archive.namelist())
+            self.assertTrue(any(name.endswith(".svg") for name in archive.namelist()))
 
     def test_developer_zip_contains_notices_with_buildable_sources(self):
         prefix = f"CyRSAssistant-{delivery.VERSION}/"

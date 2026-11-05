@@ -8,6 +8,11 @@ import shutil
 import tempfile
 import zipfile
 
+try:
+    from .generate_manual import generate as generate_manual
+except ImportError:
+    from generate_manual import generate as generate_manual
+
 ROOT = Path(__file__).resolve().parents[1]
 VERSION = re.search(r"project\(CyRSAssistant VERSION ([0-9.]+)", (ROOT / "CMakeLists.txt").read_text(encoding="utf-8-sig")).group(1)
 RUNTIME_FILES = ("dxcompiler.dll", "dxil.dll", "LICENSE-LLVM.txt", "LICENSE-MS.txt")
@@ -87,6 +92,8 @@ Requires ReShade 6.8 with full add-on support in a 64-bit Windows game.
    OpenAI-compatible API or a local model. Python is bundled; no separate
    Python installation or manual service launch is required.
 5. Write in Chat and click Send, or use Ctrl+Enter.
+6. Open Help for the complete offline manual, images and diagrams.
+   Open illustrated manual opens CyRSAssistant/Documentation/index.en.html.
 
 The interface defaults to English. French is available in Options > Language.
 The language and permission mode are remembered per game. API keys are kept
@@ -109,6 +116,8 @@ Windows 64 bits.
    configurer une API compatible OpenAI ou un modèle local. Python est intégré ;
    aucune installation séparée ni aucun lancement manuel du service n'est requis.
 6. Écrivez dans Tchat et cliquez sur Envoyer, ou utilisez Ctrl+Entrée.
+7. Ouvrez Aide pour le manuel complet hors ligne, images et schémas.
+   Ouvrir le manuel illustré ouvre Documentation/index.fr.html en français.
 
 La langue et les autorisations sont mémorisées par jeu. Les clés API restent
 uniquement en mémoire pour la session. Ce ZIP ne contient pas de preset et
@@ -160,6 +169,7 @@ def package(install=False):
             notice = (metadata / "THIRD_PARTY.md").read_text(encoding="utf-8")
             (metadata / "THIRD_PARTY.md").write_text(notice.replace("(LICENCES/", "(../LICENCES/"), encoding="utf-8")
         copy_licenses(destination / "LICENCES")
+        generate_manual(output=destination / "CyRSAssistant/Documentation", root=ROOT)
         shutil.copy2(ROOT / "tools/dependencies.lock.json", metadata / "dependencies.lock.json")
         if install:
             (metadata / "INSTALL.txt").write_text(installation_notes(), encoding="utf-8")

@@ -235,6 +235,8 @@
     "{provider} CLI was not found. Install it and sign in before retrying.": "{provider} CLI was not found. Install it and sign in before retrying.",
     "{provider} failed (code {code}). Check the CLI connection and quota.": "{provider} failed (code {code}). Check the CLI connection and quota.",
     "{provider} session missing or expired. Run {command}, then reconnect here.": "{provider} session missing or expired. Run {command}, then reconnect here.",
-    "{provider}: CLI session recognized. Model access is checked on the first message.": "{provider}: CLI session recognized. Model access is checked on the first message."
+    "{provider}: CLI session recognized. Model access is checked on the first message.": "{provider}: CLI session recognized. Model access is checked on the first message.",
+    "Help": "Help",
+    "Open Help window": "Open Help window"
   }
 }

@@ -235,6 +235,8 @@
     "{provider} CLI was not found. Install it and sign in before retrying.": "CLI {provider} introuvable. Installez-le et connectez-vous avant de réessayer.",
     "{provider} failed (code {code}). Check the CLI connection and quota.": "Échec de {provider} (code {code}). Vérifiez la connexion et le quota du CLI.",
     "{provider} session missing or expired. Run {command}, then reconnect here.": "Session {provider} absente ou expirée. Exécutez {command}, puis reconnectez-vous ici.",
-    "{provider}: CLI session recognized. Model access is checked on the first message.": "{provider} : session CLI reconnue. L'accès au modèle sera vérifié au premier envoi."
+    "{provider}: CLI session recognized. Model access is checked on the first message.": "{provider} : session CLI reconnue. L'accès au modèle sera vérifié au premier envoi.",
+    "Help": "Aide",
+    "Open Help window": "Ouvrir l’aide dans une fenêtre"
   }
 }
