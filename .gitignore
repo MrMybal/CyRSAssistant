@@ -17,3 +17,5 @@ __pycache__/
 *.user
 *.bak
 docs/validation-*.md
+
+node_modules/

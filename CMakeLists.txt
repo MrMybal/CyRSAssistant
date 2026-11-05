@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
-project(CyRSAssistant VERSION 0.8.0 LANGUAGES CXX RC)
+project(CyRSAssistant VERSION 0.9.0 LANGUAGES CXX RC)
 if(NOT WIN32 OR NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
   message(FATAL_ERROR "CyRSAssistant requires Windows x64")
 endif()
@@ -14,13 +14,18 @@ add_custom_command(OUTPUT "${CYRS_LOCALE_HEADER}"
   DEPENDS ${CYRS_LOCALES} tools/generate_locales.py companion/localization.py
   VERBATIM)
 add_custom_target(cyrs_locales DEPENDS "${CYRS_LOCALE_HEADER}")
-file(GLOB CYRS_MANUAL_CATALOGS CONFIGURE_DEPENDS "${CMAKE_SOURCE_DIR}/docs/manual/*.json")
+file(GLOB_RECURSE CYRS_HELP_INPUTS CONFIGURE_DEPENDS
+  "${CMAKE_SOURCE_DIR}/docs/content/*.md" "${CMAKE_SOURCE_DIR}/assets/*"
+  "${CMAKE_SOURCE_DIR}/src/*.cpp" "${CMAKE_SOURCE_DIR}/src/*.hpp" "${CMAKE_SOURCE_DIR}/src/*.h" "${CMAKE_SOURCE_DIR}/src/*.rc.in"
+  "${CMAKE_SOURCE_DIR}/companion/*.py" "${CMAKE_SOURCE_DIR}/companion/locales/*.json")
 set(CYRS_MANUAL_HEADER "${CMAKE_BINARY_DIR}/generated/manual_data.hpp")
-add_custom_command(OUTPUT "${CYRS_MANUAL_HEADER}"
-  COMMAND "${Python3_EXECUTABLE}" "${CMAKE_SOURCE_DIR}/tools/generate_manual.py" --header "${CYRS_MANUAL_HEADER}"
-  DEPENDS ${CYRS_MANUAL_CATALOGS} tools/generate_manual.py
+add_custom_command(OUTPUT "${CYRS_MANUAL_HEADER}" "${CMAKE_SOURCE_DIR}/build/help/index.html"
+  COMMAND "${Python3_EXECUTABLE}" "${CMAKE_SOURCE_DIR}/tools/build_help.py" --header "${CYRS_MANUAL_HEADER}"
+  DEPENDS ${CYRS_HELP_INPUTS} cydoc.config.json package.json package-lock.json CMakeLists.txt
+    tools/build_help.py tools/export_help.mjs tools/docs_reader.mjs tools/help_redirect.mjs
+    tools/cydoc.lock.json docs/reader.html docs/reader.css vendor/cydoc/cydoc-0.1.0.tgz
   VERBATIM)
-add_custom_target(cyrs_manual DEPENDS "${CYRS_MANUAL_HEADER}")
+add_custom_target(cyrs_manual DEPENDS "${CYRS_MANUAL_HEADER}" "${CMAKE_SOURCE_DIR}/build/help/index.html")
 configure_file(src/resources.rc.in "${CMAKE_BINARY_DIR}/generated/resources.rc" @ONLY)
 add_library(CyRSAssistant SHARED "${CMAKE_BINARY_DIR}/generated/resources.rc" src/branding.cpp src/manual.cpp src/manual_model.cpp src/addon.cpp src/bridge.cpp src/shader_tools.cpp src/dxc_tools.cpp src/pipeline_snapshot.cpp src/shader_lab.cpp)
 add_dependencies(CyRSAssistant cyrs_locales cyrs_manual)
@@ -28,7 +33,7 @@ target_compile_features(CyRSAssistant PRIVATE cxx_std_17)
 target_include_directories(CyRSAssistant PRIVATE third_party/reshade/include third_party/imgui third_party/json src "${CMAKE_BINARY_DIR}/generated")
 target_compile_definitions(CyRSAssistant PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX ImTextureID=ImU64)
 target_compile_options(CyRSAssistant PRIVATE /W4 /EHsc /utf-8)
-target_link_libraries(CyRSAssistant PRIVATE advapi32 d3dcompiler dxguid bcrypt shell32 ole32 windowscodecs)
+target_link_libraries(CyRSAssistant PRIVATE advapi32 d3dcompiler dxguid bcrypt shell32 shlwapi)
 target_link_options(CyRSAssistant PRIVATE "/PDBALTPATH:CyRSAssistant.pdb")
 set_target_properties(CyRSAssistant PROPERTIES PREFIX "" SUFFIX ".addon64" RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 include(CTest)
@@ -39,6 +44,7 @@ if(BUILD_TESTING)
   target_compile_definitions(manual_model_tests PRIVATE WIN32_LEAN_AND_MEAN NOMINMAX)
   target_compile_options(manual_model_tests PRIVATE /W4 /EHsc /utf-8)
   target_include_directories(manual_model_tests PRIVATE src third_party/json "${CMAKE_BINARY_DIR}/generated")
+  target_link_libraries(manual_model_tests PRIVATE shlwapi)
   add_test(NAME manual_model COMMAND manual_model_tests)
   add_executable(localization_tests tests/localization_tests.cpp)
   add_dependencies(localization_tests cyrs_locales)

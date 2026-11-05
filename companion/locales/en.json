@@ -237,6 +237,15 @@
     "{provider} session missing or expired. Run {command}, then reconnect here.": "{provider} session missing or expired. Run {command}, then reconnect here.",
     "{provider}: CLI session recognized. Model access is checked on the first message.": "{provider}: CLI session recognized. Model access is checked on the first message.",
     "Help": "Help",
-    "Open Help window": "Open Help window"
+    "CyDoc - local illustrated documentation": "CyDoc - local illustrated documentation",
+    "The manual opens in your default browser, fully offline. It includes guides, images, diagrams, API reference and distributed source code.": "The manual opens in your default browser, fully offline. It includes guides, images, diagrams, API reference and distributed source code.",
+    "Help topic": "Help topic",
+    "Search documentation": "Search documentation",
+    "Open documentation": "Open documentation",
+    "Help for this page": "Help for this page",
+    "Language follows Options at launch. In the reader: Ctrl+K searches; browser zoom adjusts text; Escape reduces enlarged images.": "Language follows Options at launch. In the reader: Ctrl+K searches; browser zoom adjusts text; Escape reduces enlarged images.",
+    "The CyDoc manual is missing. Re-extract the complete CyRSAssistant/Documentation folder from the ZIP.": "The CyDoc manual is missing. Re-extract the complete CyRSAssistant/Documentation folder from the ZIP.",
+    "The local CyDoc manual could not be opened. Check your default browser.": "The local CyDoc manual could not be opened. Check your default browser.",
+    "Cannot locate the installed add-on": "Cannot locate the installed add-on"
   }
 }

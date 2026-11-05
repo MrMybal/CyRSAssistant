@@ -9,9 +9,9 @@ import tempfile
 import zipfile
 
 try:
-    from .generate_manual import generate as generate_manual
+    from .build_help import validate as validate_help
 except ImportError:
-    from generate_manual import generate as generate_manual
+    from build_help import validate as validate_help
 
 ROOT = Path(__file__).resolve().parents[1]
 VERSION = re.search(r"project\(CyRSAssistant VERSION ([0-9.]+)", (ROOT / "CMakeLists.txt").read_text(encoding="utf-8-sig")).group(1)
@@ -21,6 +21,7 @@ RUNTIME_FILES = ("dxcompiler.dll", "dxil.dll", "LICENSE-LLVM.txt", "LICENSE-MS.t
 REQUIRED_LICENSES = (
     'AssistantRuntime-Notices.txt',
     'CyRSAssistant-GPL-3.0.txt',
+    'CyDoc.txt',
     'DXC-LLVM.txt',
     'DXC-Microsoft.txt',
     'DearImGui.txt',
@@ -92,8 +93,9 @@ Requires ReShade 6.8 with full add-on support in a 64-bit Windows game.
    OpenAI-compatible API or a local model. Python is bundled; no separate
    Python installation or manual service launch is required.
 5. Write in Chat and click Send, or use Ctrl+Enter.
-6. Open Help for the complete offline manual, images and diagrams.
-   Open illustrated manual opens CyRSAssistant/Documentation/index.en.html.
+6. Open Help > Open documentation for the complete local CyDoc manual,
+   or use a contextual Help button. It opens the matching language/page via
+   file:// in your default browser. Keep the entire Documentation folder.
 
 The interface defaults to English. French is available in Options > Language.
 The language and permission mode are remembered per game. API keys are kept
@@ -116,8 +118,9 @@ Windows 64 bits.
    configurer une API compatible OpenAI ou un modèle local. Python est intégré ;
    aucune installation séparée ni aucun lancement manuel du service n'est requis.
 6. Écrivez dans Tchat et cliquez sur Envoyer, ou utilisez Ctrl+Entrée.
-7. Ouvrez Aide pour le manuel complet hors ligne, images et schémas.
-   Ouvrir le manuel illustré ouvre Documentation/index.fr.html en français.
+7. Ouvrez Aide > Ouvrir la documentation, ou un bouton d'aide contextuel.
+   CyDoc ouvre la bonne langue/page via file:// dans le navigateur par défaut.
+   Conservez le dossier Documentation complet avec tous ses fichiers.
 
 La langue et les autorisations sont mémorisées par jeu. Les clés API restent
 uniquement en mémoire pour la session. Ce ZIP ne contient pas de preset et
@@ -149,6 +152,7 @@ def package(install=False):
     if not binary.is_file() or not service.is_file():
         raise SystemExit("Build the add-on and companion first: tools/build.py and tools/build_service.py")
     validate_delivery(binary, service)
+    documentation = validate_help(ROOT)
     suffix = "-windows-x64" if install else ""
     archive_path = ROOT / "dist" / f"CyRSAssistant-{VERSION}{suffix}.zip"
     archive_path.parent.mkdir(exist_ok=True)
@@ -169,7 +173,7 @@ def package(install=False):
             notice = (metadata / "THIRD_PARTY.md").read_text(encoding="utf-8")
             (metadata / "THIRD_PARTY.md").write_text(notice.replace("(LICENCES/", "(../LICENCES/"), encoding="utf-8")
         copy_licenses(destination / "LICENCES")
-        generate_manual(output=destination / "CyRSAssistant/Documentation", root=ROOT)
+        shutil.copytree(documentation, destination / "CyRSAssistant/Documentation")
         shutil.copy2(ROOT / "tools/dependencies.lock.json", metadata / "dependencies.lock.json")
         if install:
             (metadata / "INSTALL.txt").write_text(installation_notes(), encoding="utf-8")
@@ -183,9 +187,9 @@ def package(install=False):
                 (destination / name).write_text(f'import runpy\nrunpy.run_module("{module}", run_name="__main__")\n', encoding="utf-8")
             sources = destination / "source"
             sources.mkdir()
-            for name in ("src", "companion", "tools", "tests", "assets", "LICENCES"):
+            for name in ("src", "companion", "tools", "tests", "assets", "LICENCES", "vendor"):
                 shutil.copytree(ROOT / name, sources / name, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
-            for name in ("CMakeLists.txt", "README.md", "README.fr.md", "LICENSE", "THIRD_PARTY.md"):
+            for name in ("CMakeLists.txt", "README.md", "README.fr.md", "LICENSE", "THIRD_PARTY.md", "package.json", "package-lock.json", "cydoc.config.json"):
                 shutil.copy2(ROOT / name, sources / name)
             shutil.copytree(destination / "docs", sources / "docs")
         with zipfile.ZipFile(archive_path, "w", zipfile.ZIP_DEFLATED) as archive:

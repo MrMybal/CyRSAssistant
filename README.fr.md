@@ -8,13 +8,13 @@
 
 Assistant intégré à ReShade : décrire le rendu souhaité, exploiter les effets installés, régler un preset en direct et créer des effets adaptés. Les capacités avancées visent l'inspection du rendu, le masquage du HUD et le remplacement ciblé de shaders du jeu.
 
-État : prototype 0.8.0 Windows x64, compilé avec ReShade 6.8 / API 20. Génération FX et remplacement temporaire de pixel shaders testés dans Stray en DX11 et DX12. Compilation DXIL et création de PSO Shader Model 6 testées sur un périphérique DX12. La qualité du rendu pendant une partie reste à évaluer.
+État : prototype 0.9.0 Windows x64, compilé avec ReShade 6.8 / API 20. Génération FX et remplacement temporaire de pixel shaders testés dans Stray en DX11 et DX12. Compilation DXIL et création de PSO Shader Model 6 testées sur un périphérique DX12. La qualité du rendu pendant une partie reste à évaluer.
 
-## Aide illustrée intégrée
+## Aide CyDoc intégrée
 
-Ouvrez **CyRSAssistant > Aide** pour le manuel complet hors ligne. Il suit **Options > Language**, démarre en anglais et comprend le français. La recherche couvre 21 chapitres : installation, fournisseurs, tchat, autorisations, effets, génération/remplacement FX, DX11/DX12, catalogue, captures, CLI/MCP, données, dépannage et retour arrière. Les illustrations sont agrandissables et les schémas expliquent les parcours. Ajustez la taille du texte ou ouvrez l’aide dans une fenêtre pour la lire à côté des outils.
+Ouvrez **CyRSAssistant > Aide > Ouvrir la documentation**, ou un bouton d’aide contextuel. Le lecteur fourni s’ouvre via **file://**, en anglais par défaut ou en français selon Options. Il comprend les 21 chapitres utilisateur, les références techniques, exemples et index C++/Python. Les images s’agrandissent dans le lecteur ; les schémas statiques sont compilés en SVG. CyDoc apporte recherche, clavier/tactile, copie du code, positions de lecture et impression.
 
-**Ouvrir le manuel illustré** ouvre l’édition HTML locale dans votre navigateur, avec recherche, choix de langue et impression. Conservez `CyRSAssistant/Documentation` complet depuis le ZIP. Textes, illustrations et schémas intégrés restent disponibles dans ReShade si ce dossier manque.
+Conservez tout **CyRSAssistant/Documentation**. Aucun serveur, CDN, Internet, Node.js ou installation de lecteur n’est requis pour lire. Les anciens liens index.en.html/index.fr.html redirigent localement. Seul le module **image** est livré, sans Three.js. Génération : npm ci --omit=peer, puis npm run docs:build / npm run docs:check. [Guide de maintenance](docs/content/fr/authoring.md).
 
 ## Langue
 
@@ -46,16 +46,17 @@ Captures de versions de développement antérieures, avec l’interface en fran�
 
 ## Démarrage
 
-Téléchargez **CyRSAssistant-0.8.0-windows-x64.zip** depuis les [releases](https://github.com/MrMybal/CyRSAssistant/releases) une fois publiée, ou produisez-le localement avec `python tools/package.py --install`. Fermez le jeu et extrayez le ZIP à côté de la DLL ReShade, en conservant les sous-dossiers. Les fichiers de l’add-on sont directement à la racine du ZIP et Python est intégré.
+Téléchargez **CyRSAssistant-0.9.0-windows-x64.zip** depuis les [releases](https://github.com/MrMybal/CyRSAssistant/releases) une fois publiée, ou produisez-le localement avec `python tools/package.py --install`. Fermez le jeu et extrayez le ZIP à côté de la DLL ReShade, en conservant les sous-dossiers. Les fichiers de l’add-on sont directement à la racine du ZIP et Python est intégré.
 
 Pour produire ce ZIP : `python tools/package.py --install`.
 
-Voir [le guide d'installation et de connexion](docs/getting-started.fr.md). Le paquet avec sources est produit dans `dist/CyRSAssistant-0.8.0.zip` avec `python tools/package.py`.
+Voir [le guide d'installation et de connexion](docs/getting-started.fr.md). Le paquet avec sources est produit dans `dist/CyRSAssistant-0.9.0.zip` avec `python tools/package.py`.
 
 Compilation depuis les sources (Visual Studio 2022 C++, Windows SDK et Python 3.11.5 pour créer `build/packaging-env`) :
 
 ```powershell
 python tools/bootstrap.py
+npm ci --omit=peer
 python tools/build.py
 python -m venv build/packaging-env
 build/packaging-env/Scripts/python.exe -m pip install pyinstaller==6.20.0

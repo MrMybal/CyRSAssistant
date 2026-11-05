@@ -1,8 +1,10 @@
 #include "manual_model.hpp"
 #include "manual_data.hpp"
 #include <windows.h>
+#include <shlwapi.h>
 #include <algorithm>
-#include <climits>
+#include <stdexcept>
+#include <vector>
 
 namespace cyrs::manual {
 const nlohmann::json &document(std::string language) {
@@ -23,44 +25,58 @@ const nlohmann::json &document(std::string language) {
     language = language.substr(0, language.find('-'));
     for (const auto &book : books) if (book["code"] == language) return book;
     for (const auto &book : books) if (book["code"] == "en") return book;
-    throw std::runtime_error("English manual is missing");
+    throw std::runtime_error("English CyDoc catalog is missing");
 }
 
-std::string fold(std::string_view text) {
-    if (text.empty() || text.size() > INT_MAX) return {};
-    const int count = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, text.data(), static_cast<int>(text.size()), nullptr, 0);
-    if (count <= 0) return {};
-    std::wstring wide(count, 0);
-    MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, text.data(), static_cast<int>(text.size()), wide.data(), count);
-    const int size = FoldStringW(MAP_COMPOSITE, wide.data(), count, nullptr, 0);
-    if (size <= 0) return {};
-    std::wstring decomposed(size, 0);
-    FoldStringW(MAP_COMPOSITE, wide.data(), count, decomposed.data(), size);
-    const int lower_size = LCMapStringEx(LOCALE_NAME_INVARIANT, LCMAP_LOWERCASE, decomposed.data(), size, nullptr, 0, nullptr, nullptr, 0);
-    if (lower_size <= 0) return {};
-    std::wstring lower(lower_size, 0);
-    LCMapStringEx(LOCALE_NAME_INVARIANT, LCMAP_LOWERCASE, decomposed.data(), size, lower.data(), lower_size, nullptr, nullptr, 0);
-    lower.erase(std::remove_if(lower.begin(), lower.end(), [](wchar_t c) { return c >= 0x0300 && c <= 0x036f; }), lower.end());
-    if (lower.empty()) return {};
-    const int bytes = WideCharToMultiByte(CP_UTF8, 0, lower.data(), static_cast<int>(lower.size()), nullptr, 0, nullptr, nullptr);
-    std::string result(bytes, 0);
-    WideCharToMultiByte(CP_UTF8, 0, lower.data(), static_cast<int>(lower.size()), result.data(), bytes, nullptr, nullptr);
+const nlohmann::json *page(const nlohmann::json &book, std::string_view id) {
+    for (const auto &entry : book.at("pages")) if (entry.at("id").get_ref<const std::string &>() == id) return &entry;
+    return nullptr;
+}
+bool valid_target(const nlohmann::json &book, const std::string &id, const std::string &anchor, const std::string &media) {
+    const auto *target = page(book, id);
+    if (!target) return false;
+    if (!anchor.empty()) {
+        bool found = false;
+        for (const auto &heading : target->at("headings")) if (heading.at("id") == anchor) found = true;
+        for (const auto &item : target->value("anchors", nlohmann::json::array())) if (item == anchor) found = true;
+        if (!found) return false;
+    }
+    if (!media.empty() && std::find(target->at("media").begin(), target->at("media").end(), media) == target->at("media").end()) return false;
+    return true;
+}
+std::filesystem::path html_path(const std::filesystem::path &addon, const std::string &) {
+    return addon.parent_path() / L"CyRSAssistant" / L"Documentation" / L"index.html";
+}
+namespace {
+std::string encode(std::string_view value) {
+    constexpr char hex[] = "0123456789ABCDEF";
+    std::string result;
+    for (const unsigned char c : value)
+        if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '-' || c == '_' || c == '.' || c == '~') result += static_cast<char>(c);
+        else { result += '%'; result += hex[c >> 4]; result += hex[c & 15]; }
     return result;
 }
-
-std::vector<size_t> search(const nlohmann::json &book, std::string_view query) {
-    auto needle = fold(query);
-    const auto first = needle.find_first_not_of(" \t\r\n");
-    needle = first == std::string::npos ? "" : needle.substr(first, needle.find_last_not_of(" \t\r\n") - first + 1);
-    std::vector<size_t> results;
-    const auto &chapters = book.at("chapters");
-    for (size_t i = 0; i < chapters.size(); ++i)
-        if (needle.empty() || fold(chapters[i].dump()).find(needle) != std::string::npos) results.push_back(i);
-    return results;
 }
-
-std::filesystem::path html_path(const std::filesystem::path &addon, const std::string &language) {
-    const auto code = document(language).at("code").get<std::string>();
-    return addon.parent_path() / L"CyRSAssistant" / L"Documentation" / ("index." + code + ".html");
+std::wstring help_url(const std::filesystem::path &addon, const std::string &language, const std::string &id,
+                      const std::string &anchor, const std::string &media, const std::string &query) {
+    const auto &book = document(language);
+    if (!valid_target(book, id, anchor, media) || query.size() > 255 || query.find('\0') != std::string::npos)
+        throw std::invalid_argument("Unknown CyDoc page, section, media or invalid search");
+    const auto path = html_path(addon);
+    std::vector<wchar_t> buffer(32768);
+    DWORD count = static_cast<DWORD>(buffer.size());
+    if (FAILED(UrlCreateFromPathW(path.c_str(), buffer.data(), &count, 0)))
+        throw std::runtime_error("Cannot encode the local documentation file URL");
+    std::wstring url(buffer.data());
+    std::string route = "#/" + encode(book.at("code").get<std::string>()) + "/" + encode(id);
+    if (!anchor.empty()) route += "/" + encode(anchor);
+    bool first = true;
+    const auto add = [&](const char *key, const std::string &value) {
+        if (!value.empty()) { route += first ? '?' : '&'; first = false; route += key; route += "=" + encode(value); }
+    };
+    add("media", media);
+    add("q", query);
+    url.append(route.begin(), route.end()); // Route is ASCII after UTF-8 percent encoding.
+    return url;
 }
 }

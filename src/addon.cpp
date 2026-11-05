@@ -20,7 +20,7 @@
 #include <filesystem>
 
 extern "C" __declspec(dllexport) const char *NAME = "CyRSAssistant";
-extern "C" __declspec(dllexport) const char *DESCRIPTION = "CyRSAssistant 0.8.0 - Cyberalien - Live shader assistant.";
+extern "C" __declspec(dllexport) const char *DESCRIPTION = "CyRSAssistant 0.9.0 - Cyberalien - Live shader assistant.";
 
 namespace {
 using namespace cyrs;
@@ -334,26 +334,23 @@ json execute(effect_runtime *runtime, Runtime &state, const json &request) {
     if (request.contains("prompt_id"))
         require(state.pending && request.at("prompt_id") == state.prompt_id, "Prompt cancelled or superseded");
     if (method == "get_help_state") {
-        json images = json::array();
-        for (const auto &[name, image] : state.manual.images)
-            images.push_back({{"name", name}, {"loaded", image.view.handle != 0}, {"width", image.width}, {"height", image.height}});
-        return {{"ok", true}, {"help", {{"open", state.manual.window_open}, {"language", manual::document(state.language).at("code")},
-            {"chapter", state.manual.selected}, {"draws", state.manual.draws}, {"matches", state.manual.matches.size()}, {"images", images}}}};
+        return {{"ok", true}, {"help", {{"open", state.manual.launched}, {"reader", "CyDoc"},
+            {"language", manual::document(state.language).at("code")}, {"chapter", state.manual.selected},
+            {"anchor", state.manual.anchor}, {"media", state.manual.media}, {"url", state.manual.last_url},
+            {"error", state.manual.open_error}}}};
     }
     if (method == "open_help") {
         require(request.at("session") == session, "Session changed");
-        const auto &book = manual::document(state.language);
         const auto chapter = request.value("chapter", state.manual.selected);
-        const auto &chapters = book.at("chapters");
-        require(std::any_of(chapters.begin(), chapters.end(), [&](const json &entry) { return entry.at("id") == chapter; }), "Unknown manual chapter");
+        const auto anchor = request.value("anchor", std::string());
+        const auto media = request.value("media", std::string());
         const auto query = request.value("query", std::string());
+        require(manual::valid_target(manual::document(state.language), chapter, anchor, media), "Unknown CyDoc page, section or media");
         require(query.size() < state.manual.query.size() && query.find('\0') == std::string::npos, "Invalid manual search");
-        state.manual.selected = chapter;
-        state.manual.query.fill(0);
-        std::copy(query.begin(), query.end(), state.manual.query.begin());
-        state.manual.rebuild = true; state.manual.scroll_top = true;
-        state.manual.window_open = request.value("open", true);
-        if (state.manual.window_open) runtime->open_overlay(true, input_source::none);
+        if (request.value("open", true)) {
+            try { manual::launch(addon_module, state.language, state.manual, chapter, anchor, media, query); }
+            catch (const std::exception &e) { state.manual.open_error = e.what(); throw; }
+        } else state.manual.launched = false;
         return {{"ok", true}};
     }
     if (method == "set_language") {
@@ -619,7 +616,6 @@ void destroy(effect_runtime *runtime) {
     std::lock_guard<std::recursive_mutex> lock(runtime_mutex);
     auto it = runtimes.find(runtime);
     if (it == runtimes.end()) return;
-    it->second.manual.destroy(runtime);
     it->second.branding.destroy(runtime);
     runtimes.erase(it);
 }
@@ -634,18 +630,6 @@ void reload(effect_runtime *runtime) {
     }
     catch (const std::exception &e) { it->second.parameters.clear(); it->second.techniques.clear(); it->second.status = e.what(); }
 }
-void manual_window(effect_runtime *runtime) {
-    std::lock_guard<std::recursive_mutex> lock(runtime_mutex);
-    auto it = runtimes.find(runtime);
-    if (it == runtimes.end() || !it->second.manual.window_open) return;
-    auto &state = it->second;
-    const auto &book = manual::document(state.language);
-    const auto title = book.at("ui").at("title").get<std::string>() + "###cyrs_manual_window";
-    const auto screen = ImGui::GetIO().DisplaySize;
-    ImGui::SetNextWindowSize(ImVec2(std::min(1000.0f, screen.x * .9f), std::min(850.0f, screen.y * .9f)), ImGuiCond_FirstUseEver);
-    if (ImGui::Begin(title.c_str(), &state.manual.window_open)) manual::draw(runtime, addon_module, state.language, state.manual);
-    ImGui::End();
-}
 void overlay(effect_runtime *runtime) {
     std::lock_guard<std::recursive_mutex> lock(runtime_mutex);
     auto it = runtimes.find(runtime);
@@ -653,6 +637,15 @@ void overlay(effect_runtime *runtime) {
     auto &s = it->second;
     auto tr = [&](const char *message) { return i18n::translate(s.language, message); };
     auto ui_label = [&](const char *message) { return i18n::label(s.language, message); };
+    auto context_help = [&](const char *page) {
+        ImGui::PushID(page);
+        if (ImGui::SmallButton(ui_label("Help for this page").c_str())) {
+            try { manual::launch(addon_module, s.language, s.manual, page); }
+            catch (const std::exception &e) { s.manual.open_error = e.what(); }
+        }
+        if (!s.manual.open_error.empty()) ImGui::TextWrapped("%s", tr(s.manual.open_error.c_str()));
+        ImGui::PopID();
+    };
     try {
         if (s.branding.view.handle) {
             const float size = ImGui::GetTextLineHeight() * 2 + ImGui::GetStyle().ItemSpacing.y;
@@ -660,7 +653,7 @@ void overlay(effect_runtime *runtime) {
             ImGui::SameLine();
         }
         ImGui::BeginGroup();
-        ImGui::Text("CyRSAssistant 0.8.0 - %s", tr("AI chat"));
+        ImGui::Text("CyRSAssistant 0.9.0 - %s", tr("AI chat"));
         auto &c = s.connection;
         const bool ready = connected(c);
         const bool lost = c.wanted && GetTickCount64() - (c.heartbeat ? c.heartbeat : c.started) >= 10000;
@@ -673,6 +666,7 @@ void overlay(effect_runtime *runtime) {
         ImGui::TextDisabled(tr("Permissions: %s"), permission_names[s.permissions.mode]);
         if (ImGui::BeginTabBar("assistant_tabs")) {
             if (ImGui::BeginTabItem(ui_label("Chat").c_str())) {
+                context_help("chat");
         ImGui::BeginDisabled(s.pending);
         if (ImGui::SmallButton(ui_label("New conversation").c_str())) { s.conversation.clear(); s.answer.clear(); s.prompt.clear(); s.input.fill(0); }
         ImGui::EndDisabled();
@@ -734,6 +728,7 @@ void overlay(effect_runtime *runtime) {
                 ImGui::EndTabItem();
             }
             if (ImGui::BeginTabItem(ui_label("Options").c_str())) {
+                context_help("permissions");
                 if (ImGui::BeginCombo(ui_label("Language").c_str(), i18n::language_name(s.language))) {
                     for (const auto &language : i18n::languages) {
                         const bool selected = s.language == language.code;
@@ -762,6 +757,7 @@ void overlay(effect_runtime *runtime) {
                 ImGui::EndTabItem();
             }
             if (ImGui::BeginTabItem(ui_label("Connection").c_str())) {
+                context_help("connect");
         ImGui::SeparatorText(tr("Provider connection"));
         ImGui::BeginDisabled(c.wanted);
         const char *provider_names[] = {tr("Codex (CLI session)"), tr("Claude Code (CLI session)"), tr("OpenAI-compatible API"), tr("Local model (API)")};
@@ -784,6 +780,7 @@ void overlay(effect_runtime *runtime) {
                 ImGui::EndTabItem();
             }
             if (ImGui::BeginTabItem(ui_label("Effects").c_str())) {
+                context_help("effects");
         if (!s.generated_previous.empty() && !s.generated_wait && ImGui::Button(ui_label("Restore replaced effect").c_str())) {
             auto request = snapshot(runtime, s); request["method"] = "restore_generated_effect";
             execute(runtime, s, request);
@@ -866,6 +863,7 @@ void overlay(effect_runtime *runtime) {
                 ImGui::EndTabItem();
             }
             if (ImGui::BeginTabItem(ui_label("Shaders").c_str())) {
+                context_help("native-shaders");
             ImGui::TextWrapped(tr("Direct3D 11 / 12 pixel shaders. Identified by hash, not by visual purpose: a shared shader can affect multiple objects."));
             if (ImGui::Button(ui_label("Refresh game shaders").c_str())) {
                 s.game_shaders = shader_lab::inventory(runtime->get_device());
@@ -902,8 +900,7 @@ void overlay(effect_runtime *runtime) {
                 ImGui::EndTabItem();
             }
             if (ImGui::BeginTabItem(ui_label("Help").c_str())) {
-                if (ImGui::SmallButton(ui_label("Open Help window").c_str())) s.manual.window_open = true;
-                manual::draw(runtime, addon_module, s.language, s.manual);
+                manual::draw(addon_module, s.language, s.manual);
                 ImGui::EndTabItem();
             }
             ImGui::EndTabBar();
@@ -917,7 +914,7 @@ extern "C" __declspec(dllexport) bool AddonInit(HMODULE module, HMODULE reshade_
         addon_module = module;
         manual::document("en");
         manual::document("fr");
-        reshade::log::message(reshade::log::level::info, "CyRSAssistant offline manual initialized (English/French).");
+        reshade::log::message(reshade::log::level::info, "CyRSAssistant CyDoc help catalog initialized (English/French).");
         session = std::to_string(GetCurrentProcessId()) + "-" + std::to_string(std::random_device{}());
         bridge.start();
         shader_lab::register_events();
@@ -926,14 +923,12 @@ extern "C" __declspec(dllexport) bool AddonInit(HMODULE module, HMODULE reshade_
         reshade::register_event<reshade::addon_event::reshade_reloaded_effects>(reload);
         reshade::register_event<reshade::addon_event::reshade_present>(present);
         reshade::register_overlay("CyRSAssistant", overlay);
-        reshade::register_event<reshade::addon_event::reshade_overlay>(manual_window);
         return true;
     } catch (...) { bridge.stop(); reshade::unregister_addon(module, reshade_module); return false; }
 }
 extern "C" __declspec(dllexport) void AddonUninit(HMODULE module, HMODULE reshade_module) {
     bridge.stop();
     shader_lab::unregister_events();
-    reshade::unregister_event<reshade::addon_event::reshade_overlay>(manual_window);
     reshade::unregister_overlay("CyRSAssistant", overlay);
     reshade::unregister_event<reshade::addon_event::reshade_present>(present);
     reshade::unregister_event<reshade::addon_event::reshade_reloaded_effects>(reload);
@@ -941,7 +936,7 @@ extern "C" __declspec(dllexport) void AddonUninit(HMODULE module, HMODULE reshad
     reshade::unregister_event<reshade::addon_event::init_effect_runtime>(init);
     {
         std::lock_guard<std::recursive_mutex> lock(runtime_mutex);
-        for (auto &[runtime, state] : runtimes) { state.manual.destroy(runtime); state.branding.destroy(runtime); }
+        for (auto &[runtime, state] : runtimes) { state.branding.destroy(runtime); }
         runtimes.clear();
     }
     if (companion_process) { CloseHandle(companion_process); companion_process = nullptr; }
