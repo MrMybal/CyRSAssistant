@@ -4,7 +4,7 @@ title: Construire et maintenir ce manuel
 description: Construire et maintenir ce manuel
 section: Référence développeur
 order: 140
-sourceRevision: 1
+sourceRevision: 2
 ---
 
 ## Génération et paquet {#build}
@@ -48,3 +48,19 @@ L’index est lexical, sans analyse sémantique complète C++/Python. Il colore 
 Contrôlez liens, IDs/ancres/médias bilingues, révisions, ressources locales, bundles, anciennes URL, chemins Unicode et ZIP. Testez file:// et le lancement natif Windows. Linux/macOS/Android ne sont pas des cibles du produit ; le stockage hors environnements testés reste à vérifier.
 
 Essai Chrome Windows facultatif : `node tests/manual_browser_smoke.mjs`. Passez le dossier exporté en premier argument, ou définissez CHROME_PATH. Il lance un navigateur headless isolé et bloque HTTP/HTTPS.
+
+## Publication GitHub Pages {#publication}
+
+Le [manuel en ligne en français](https://mrmybal.github.io/CyRSAssistant/#/fr/start) et le [manuel en anglais](https://mrmybal.github.io/CyRSAssistant/#/en/start) partagent le lecteur, le contenu et le module image de l’export hors ligne. Aucun exécutable, service, configuration utilisateur, arbre de dépendances npm ou paquet de sources applicatives n’est déployé sur Pages.
+
+```bash
+npm ci --omit=peer
+npm run docs:pages
+npm run docs:pages:check
+node tests/manual_browser_smoke.mjs build/pages-project/site
+node tests/manual_browser_smoke.mjs build/pages-project/site --http
+```
+
+L’artefact est build/pages-project/site. Le générateur Pages utilise docs/reference-sources.json pour conserver une référence de code versionnée indépendamment de la branche applicative. Cela permet de documenter une version de développement plus récente que l’application publiée. Actualisez volontairement cette référence depuis les sources de la version concernée avec `python tools/build_pages.py --refresh-sources`, puis relisez et commitez cet instantané avec la documentation. Le manuel installé continue d’indexer les sources réelles de l’application via tools/build_help.py.
+
+Le workflow GitHub Actions Documentation régénère et vérifie les modifications concernées sur main, valide les pull requests sans déploiement et permet un lancement manuel. Il teste le lecteur local et un sous-chemin de projet, puis transmet uniquement l’export vérifié à l’environnement github-pages. Les actions et l’archive CyDoc sont épinglées. Les ressources relatives et les routes après # fonctionnent sur Pages et avec file://. Les anciennes adresses index.en.html/index.fr.html restent valides.

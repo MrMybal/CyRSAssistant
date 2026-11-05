@@ -4,7 +4,7 @@ title: Build and maintain this manual
 description: Build and maintain this manual
 section: Developer reference
 order: 140
-revision: 1
+revision: 2
 ---
 
 ## Generate and package {#build}
@@ -48,3 +48,19 @@ The source index is lexical, not a full C++/Python semantic API extractor. It hi
 Tests must check manifest links, bilingual IDs/anchors/media, translation revisions, local assets, selected bundles, legacy URLs, Unicode paths and packaged contents. Test the exported file:// reader and native help launch on Windows. Linux/macOS/Android are not product targets; browser storage behavior outside tested environments remains to verify.
 
 Optional Windows Chrome smoke test: `node tests/manual_browser_smoke.mjs`. Pass an exported directory as the first argument, or set CHROME_PATH. It launches an isolated headless browser and blocks HTTP/HTTPS requests.
+
+## GitHub Pages publication {#publication}
+
+The [English online manual](https://mrmybal.github.io/CyRSAssistant/#/en/start) and [French online manual](https://mrmybal.github.io/CyRSAssistant/#/fr/start) use the same reader, content and image module as the offline export. No application executable, service, configuration, npm dependency tree or source archive is deployed to Pages.
+
+```bash
+npm ci --omit=peer
+npm run docs:pages
+npm run docs:pages:check
+node tests/manual_browser_smoke.mjs build/pages-project/site
+node tests/manual_browser_smoke.mjs build/pages-project/site --http
+```
+
+The artifact is build/pages-project/site. The Pages builder uses docs/reference-sources.json to preserve the versioned source reference independently of the application branch. This matters when the online manual describes a development version newer than the published application. Update that reference intentionally from the corresponding application checkout with `python tools/build_pages.py --refresh-sources`, then review and commit the snapshot with the documentation. The installed manual continues to index the actual application sources through tools/build_help.py.
+
+The Documentation GitHub Actions workflow rebuilds and checks relevant pushes to main, validates pull requests without deploying, and supports manual dispatch. It tests the file reader and a project subpath, then uploads only the checked export and deploys it to the github-pages environment. All actions and the CyDoc archive are pinned. Project-relative resources and hash routes support both GitHub Pages and file URLs. The legacy index.en.html/index.fr.html addresses remain valid.

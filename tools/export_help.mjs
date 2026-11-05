@@ -1,18 +1,28 @@
-// Application host integration. All CyDoc APIs are public package entry points.
+// Shared host export for installed offline help and GitHub Pages.
 import { execFileSync } from 'node:child_process';
 import { copyFile, writeFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+import { parseArgs } from 'node:util';
 import { build } from 'esbuild';
-const root = process.cwd(), output = resolve(root, 'build/help');
-execFileSync(process.execPath, [resolve(root, 'node_modules/cydoc/tools/cli.mjs'), process.argv[2] === 'check' ? 'check' : 'build', resolve(root, 'cydoc.config.json')], { stdio: 'inherit' });
-await Promise.all([
-  build({ entryPoints: ['tools/docs_reader.mjs'], bundle: true, format: 'iife', minify: true, target: 'es2020', outfile: resolve(output, 'viewer.js'), legalComments: 'eof' }),
-  build({ entryPoints: ['tools/help_redirect.mjs'], bundle: true, format: 'iife', minify: true, target: 'es2020', outfile: resolve(output, 'legacy.js'), legalComments: 'eof' }),
-  copyFile('docs/reader.html', resolve(output, 'index.html')),
-  copyFile('docs/reader.css', resolve(output, 'reader.css')),
-  copyFile('node_modules/cydoc/LICENSE', resolve(output, 'LICENSE.CyDoc.txt'))
-]);
-for (const locale of ['en', 'fr']) {
-  const text = locale === 'fr' ? 'Ouvrir la documentation locale' : 'Open the local documentation';
-  await writeFile(resolve(output, 'index.' + locale + '.html'), '<!doctype html><html lang="' + locale + '"><meta charset="utf-8"><title>CyRSAssistant</title><script src="legacy.js" defer></script><a href="index.html#/' + locale + '/start">' + text + '</a></html>\n');
+const toolRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+export async function exportHelp({ projectRoot = toolRoot, output = resolve(projectRoot, 'build/help'), command = 'build' } = {}) {
+  execFileSync(process.execPath, [resolve(toolRoot, 'node_modules/cydoc/tools/cli.mjs'), command, resolve(projectRoot, 'cydoc.config.json')], { cwd: projectRoot, stdio: 'inherit' });
+  const bundle = (entry, name) => build({ entryPoints: [resolve(toolRoot, entry)], bundle: true, format: 'iife', minify: true, target: 'es2020', outfile: resolve(output, name), legalComments: 'eof' });
+  await Promise.all([
+    bundle('tools/docs_reader.mjs', 'viewer.js'),
+    bundle('tools/help_redirect.mjs', 'legacy.js'),
+    copyFile(resolve(toolRoot, 'docs/reader.html'), resolve(output, 'index.html')),
+    copyFile(resolve(toolRoot, 'docs/reader.css'), resolve(output, 'reader.css')),
+    copyFile(resolve(toolRoot, 'node_modules/cydoc/LICENSE'), resolve(output, 'LICENSE.CyDoc.txt'))
+  ]);
+  for (const locale of ['en', 'fr']) {
+    const text = locale === 'fr' ? 'Ouvrir la documentation' : 'Open the documentation';
+    await writeFile(resolve(output, 'index.' + locale + '.html'), '<!doctype html><html lang="' + locale + '"><meta charset="utf-8"><title>CyRSAssistant</title><script src="legacy.js" defer></script><a href="index.html#/' + locale + '/start">' + text + '</a></html>\n');
+  }
+}
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
+  const { values, positionals } = parseArgs({ options: { project: { type: 'string' }, output: { type: 'string' } }, allowPositionals: true });
+  const projectRoot = values.project ? resolve(values.project) : toolRoot;
+  await exportHelp({ projectRoot, output: values.output ? resolve(values.output) : resolve(projectRoot, 'build/help'), command: positionals[0] === 'check' ? 'check' : 'build' });
 }

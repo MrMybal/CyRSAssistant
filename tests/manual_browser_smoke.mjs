@@ -1,18 +1,43 @@
-// Windows Chrome smoke test of the real file:// export. No server or browser driver dependency.
+// Chrome smoke test of the complete file:// or HTTP(S) CyDoc export. No browser driver dependency.
 import { spawn } from 'node:child_process';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { createServer } from 'node:http';
 import assert from 'node:assert/strict';
 const chrome = process.env.CHROME_PATH || 'C:/Program Files/Google/Chrome/Application/chrome.exe';
-const output = resolve(process.argv[2] || 'build/help');
+const argument = process.argv[2] || 'build/help';
+const remote = /^https?:/.test(argument);
+const output = remote ? null : resolve(argument);
+let server;
+let base = remote ? new URL('index.html', argument.endsWith('/') ? argument : argument+'/').href : pathToFileURL(join(output,'index.html')).href;
+if (process.argv.includes('--http') && !remote) {
+  const prefix='/CyRSAssistant/';
+  server = createServer(async (request,response)=>{
+    try {
+      const pathname=decodeURIComponent(new URL(request.url,'http://localhost').pathname);
+      const file=resolve(output,pathname.slice(prefix.length) || 'index.html');
+      if(!pathname.startsWith(prefix) || !file.startsWith(output+'/') && !file.startsWith(output+'\\')) throw Error('Outside export');
+      response.setHeader('Content-Security-Policy', "default-src 'self' data: blob:; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'none'; object-src 'none'");
+      const types={html:'text/html',js:'text/javascript',css:'text/css',json:'application/json',png:'image/png'};
+      response.setHeader('Content-Type',(types[file.split('.').pop()] || 'application/octet-stream')+'; charset=utf-8');
+      response.end(await readFile(file));
+    } catch { response.writeHead(404);response.end('Not found'); }
+  });
+  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+  base='http://127.0.0.1:'+server.address().port+prefix+'index.html';
+}
+const online=base.startsWith('http');
+const origin=online ? new URL(base).origin : null;
+// Optional host-injected antivirus origin; never set by CI.
+const injectedOrigin=process.env.BROWSER_INJECTED_ORIGIN || null;
 const profile = await mkdtemp(join(tmpdir(), 'cyrs-cydoc-browser-'));
 const child = spawn(chrome, ['--headless=new','--disable-gpu','--no-first-run','--no-default-browser-check',
   '--remote-debugging-port=0','--user-data-dir='+profile,'--window-size=1440,1050','about:blank'], { stdio:'ignore', windowsHide:true });
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 let socket, sequence = 0;
-const pending = new Map(), requests = [], exceptions = [];
+const pending = new Map(), requests = [], exceptions = [], failedResources = [];
 async function call(method, params={}) {
   const id = ++sequence;
   return new Promise((resolve,reject) => { pending.set(id,{resolve,reject}); socket.send(JSON.stringify({id,method,params})); });
@@ -27,7 +52,6 @@ async function wait(expression) {
   while(Date.now()<until) { if(await evaluate(expression)) return; await sleep(80); }
   throw Error('Timed out: '+expression);
 }
-const base = pathToFileURL(join(output,'index.html')).href;
 async function navigate(url) { await call('Page.navigate',{url}); await wait("!!document.querySelector('main h1')"); }
 try {
   let port;
@@ -40,10 +64,11 @@ try {
     const item=JSON.parse(event.data);
     if(item.id) { const promise=pending.get(item.id); pending.delete(item.id); item.error ? promise?.reject(Error(JSON.stringify(item.error))) : promise?.resolve(item.result); }
     if(item.method==='Network.requestWillBeSent') requests.push(item.params.request.url);
+    if(item.method==='Network.responseReceived' && item.params.response.status>=400) failedResources.push(item.params.response.url+': '+item.params.response.status);
     if(item.method==='Runtime.exceptionThrown') exceptions.push(item.params.exceptionDetails.text+': '+item.params.exceptionDetails.exception?.description);
   });
   await call('Page.enable'); await call('Runtime.enable'); await call('Network.enable');
-  await call('Network.setBlockedURLs',{urls:['http://*','https://*']});
+  if(!online) await call('Network.setBlockedURLs',{urls:['http://*','https://*']});
   await navigate(base);
   assert.equal(await evaluate('document.documentElement.lang'),'en');
   assert.equal(await evaluate("document.querySelector('#app').dataset.theme"),'nord');
@@ -84,7 +109,7 @@ try {
   await evaluate("location.hash='#/fr/create'");await wait("!!document.querySelector('main .diagram')");
   await evaluate("location.hash='#/fr/protocol'");await wait("!!document.querySelector('main #help')");
   await wait('Math.abs(scrollY-'+position+')<5');
-  await navigate(pathToFileURL(join(output,'index.fr.html')).href+'#chat');
+  await navigate(new URL('index.fr.html',base).href+'#chat');
   await wait("location.hash==='#/fr/chat' && !!document.querySelector('main h1')");
   assert.equal(await evaluate('document.documentElement.lang'),'fr');
   await call('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
@@ -99,11 +124,14 @@ try {
   await evaluate("scrollTo({top:0,behavior:'instant'})");await sleep(150);
   const shot=await call('Page.captureScreenshot',{format:'png'});
   await writeFile(resolve('build/cydoc-reader-fr.png'),Buffer.from(shot.data,'base64'));
-  assert.deepEqual(requests.filter(url=>/^https?:/.test(url)),[]);
+  const injected=requests.filter(url=>/^https?:/.test(url) && new URL(url).origin===injectedOrigin);
+  if(injected.length) console.log('Host-injected antivirus requests excluded: '+injected.length);
+  assert.deepEqual(requests.filter(url=>/^https?:/.test(url) && new URL(url).origin!==injectedOrigin && (!online || new URL(url).origin!==origin)),[]);
+  assert.deepEqual(failedResources,[]);
   assert.deepEqual(exceptions,[]);
-  console.log('PASS: file:// EN default, FR switch, links/anchors/media, zoom, in-window enlargement/Escape, Ctrl+K/search, reading position, legacy redirect, responsive/touch emulation; no HTTP requests or JS exceptions.');
+  console.log('PASS: '+(online ? 'HTTP(S)' : 'file://')+' EN default, FR switch, links/anchors/media, zoom, in-window enlargement/Escape, Ctrl+K/search, reading position, legacy redirect, responsive/touch emulation; no unexpected external requests, missing resources or JS exceptions.');
 } finally {
-  socket?.close();child.kill();
+  socket?.close();child.kill();server?.closeAllConnections();server?.close();
   await sleep(300);
   await rm(profile,{recursive:true,force:true}).catch(()=>{});
 }

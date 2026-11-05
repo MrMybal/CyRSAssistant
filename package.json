@@ -8,7 +8,9 @@
   },
   "scripts": {
     "docs:build": "python tools/build_help.py",
-    "docs:check": "python tools/build_help.py --check"
+    "docs:check": "python tools/build_help.py --check",
+    "docs:pages": "python tools/build_pages.py",
+    "docs:pages:check": "node tools/check_pages.mjs build/pages-project/site"
   },
   "devDependencies": {
     "cydoc": "file:vendor/cydoc/cydoc-0.1.0.tgz",
