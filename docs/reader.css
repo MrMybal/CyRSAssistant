@@ -1,9 +1,0 @@
-/* Product branding; CyDoc retains its keyboard, touch and in-window media controls. */
-.cydoc-viewer[data-theme="nord"] { --accent:#40d6c9; --accent-bg:#193a40; --accent-text:#74eee0; }
-.brand-mark { background: url("assets/cyrsassistant-logo-turquoise.png") center/contain no-repeat !important; border:0 !important; box-shadow:none !important; }
-.brand-mark > svg { visibility:hidden; }
-.diagram { max-width:100%; overflow:auto; }
-.diagram svg { max-width:100%; height:auto; }
-@media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } }
-
-.code-block code.language-text .code-line { white-space:pre-wrap; overflow-wrap:anywhere; }

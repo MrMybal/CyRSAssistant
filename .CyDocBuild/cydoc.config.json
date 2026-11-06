@@ -1,0 +1,75 @@
+{
+  "name": "CyRSAssistant",
+  "version": "0.9.0",
+  "defaultLocale": "en",
+  "locales": [
+    {
+      "code": "en",
+      "label": "English"
+    },
+    {
+      "code": "fr",
+      "label": "Français"
+    }
+  ],
+  "homePage": "start",
+  "logo": "assets/cyrsassistant-logo-turquoise.png",
+  "content": "manual",
+  "assets": "assets",
+  "out": "../Documentation",
+  "modules": [
+    "image"
+  ],
+  "sources": [
+    "../companion"
+  ],
+  "apiIndex": {
+    "enabled": false
+  },
+  "aliases": {
+    "overview": "start",
+    "quickstart": "install",
+    "getting-started": "install",
+    "getting-started-fr": "install",
+    "api-links": "protocol",
+    "writing": "authoring",
+    "authoring": "reference#overview",
+    "source-companion-init-py": "protocol#transport",
+    "source-companion-main-py": "protocol#transport",
+    "source-companion-capture-py": "protocol#transport",
+    "source-companion-catalog-py": "protocol#transport",
+    "source-companion-chat-py": "protocol#transport",
+    "source-companion-conversation-py": "protocol#transport",
+    "source-companion-effect-tools-py": "protocol#transport",
+    "source-companion-generation-py": "protocol#transport",
+    "source-companion-localization-py": "protocol#transport",
+    "source-companion-mcp-py": "protocol#transport",
+    "source-companion-permissions-py": "protocol#transport",
+    "source-companion-provider-py": "protocol#transport",
+    "source-companion-service-py": "protocol#transport",
+    "source-companion-transport-py": "python-client#api",
+    "source-src-addon-cpp": "protocol#transport",
+    "source-src-branding-cpp": "protocol#transport",
+    "source-src-branding-hpp": "protocol#transport",
+    "source-src-bridge-cpp": "protocol#transport",
+    "source-src-bridge-hpp": "protocol#transport",
+    "source-src-capture-hpp": "protocol#transport",
+    "source-src-connection-hpp": "protocol#transport",
+    "source-src-dxc-tools-cpp": "native-shaders#overview",
+    "source-src-dxc-tools-hpp": "native-shaders#overview",
+    "source-src-localization-hpp": "protocol#transport",
+    "source-src-manual-cpp": "protocol#help",
+    "source-src-manual-hpp": "protocol#help",
+    "source-src-manual-model-cpp": "protocol#help",
+    "source-src-manual-model-hpp": "protocol#help",
+    "source-src-permissions-hpp": "protocol#transport",
+    "source-src-pipeline-snapshot-cpp": "native-shaders#overview",
+    "source-src-pipeline-snapshot-hpp": "native-shaders#overview",
+    "source-src-protocol-hpp": "protocol#transport",
+    "source-src-resources-h": "protocol#transport",
+    "source-src-shader-lab-cpp": "native-shaders#overview",
+    "source-src-shader-lab-hpp": "native-shaders#overview",
+    "source-src-shader-tools-cpp": "native-shaders#overview",
+    "source-src-shader-tools-hpp": "native-shaders#overview"
+  }
+}

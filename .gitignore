@@ -19,3 +19,8 @@ __pycache__/
 docs/validation-*.md
 
 node_modules/
+
+.CyDocBuild/internal/
+.CyDocBuild/generated/
+.CyDocBuild/node_modules/
+Documentation/

@@ -18,16 +18,20 @@ int main() {
     }
     CHECK(valid_target(en, "connect", "overview", "connection-preview"));
     CHECK(valid_target(fr, "chat", "overview", "chat-preview"));
-    CHECK(valid_target(fr, "source-src-manual-cpp", "L1", ""));
+    CHECK(valid_target(fr, "source-src-manual-cpp", "L1", "")); // Legacy link redirects to public help API.
+    CHECK(valid_target(fr, "python-client", "api", ""));
+    CHECK(page(en, "authoring")->at("id") == "reference");
+    for (const auto &entry : en.at("pages")) CHECK(entry.at("id").get<std::string>().find("source-") != 0);
     CHECK(!valid_target(en, "connect", "absent", ""));
     CHECK(!valid_target(en, "connect", "", "chat-preview"));
     CHECK(!valid_target(en, "../secret", "", ""));
     const auto addon = std::filesystem::path(L"C:/Games/Été #1/CyRSAssistant.addon64");
-    CHECK(html_path(addon, "fr").filename() == "index.html");
+    CHECK(html_path(addon, "fr").filename() == "Documentation.html");
     const auto url = help_url(addon, "fr-FR", "connect", "overview", "connection-preview", "bloom & threshold");
     CHECK(url.find(L"file:///C:/Games/") == 0);
     CHECK(url.find(L"%20%231/") != std::wstring::npos);
     CHECK(url.find(L"#/fr/connect/overview?media=connection-preview&q=bloom%20%26%20threshold") != std::wstring::npos);
+    CHECK(help_url(addon, "en", "source-companion-transport-py", "L1").find(L"#/en/python-client/api") != std::wstring::npos);
     CHECK(help_url(addon, "unknown", "start").find(L"#/en/start") != std::wstring::npos);
     for (const std::string query : {std::string(256, 'x'), std::string("bad\0value", 9)}) {
         bool rejected = false;

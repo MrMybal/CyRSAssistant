@@ -238,7 +238,6 @@
     "{provider}: CLI session recognized. Model access is checked on the first message.": "{provider} : session CLI reconnue. L'accès au modèle sera vérifié au premier envoi.",
     "Help": "Aide",
     "CyDoc - local illustrated documentation": "CyDoc - documentation locale illustrée",
-    "The manual opens in your default browser, fully offline. It includes guides, images, diagrams, API reference and distributed source code.": "Le manuel s’ouvre hors ligne dans votre navigateur par défaut : guides, images, schémas, référence API et sources distribuées.",
     "Help topic": "Rubrique d’aide",
     "Search documentation": "Rechercher dans la documentation",
     "Open documentation": "Ouvrir la documentation",
@@ -246,6 +245,7 @@
     "Language follows Options at launch. In the reader: Ctrl+K searches; browser zoom adjusts text; Escape reduces enlarged images.": "La langue suit Options au lancement. Dans le lecteur : Ctrl+K recherche ; le zoom du navigateur ajuste le texte ; Échap réduit une image agrandie.",
     "The CyDoc manual is missing. Re-extract the complete CyRSAssistant/Documentation folder from the ZIP.": "Le manuel CyDoc est absent. Réextrayez le dossier CyRSAssistant/Documentation complet du ZIP.",
     "The local CyDoc manual could not be opened. Check your default browser.": "Le manuel CyDoc local n’a pas pu être ouvert. Vérifiez votre navigateur par défaut.",
-    "Cannot locate the installed add-on": "Impossible de localiser l’add-on installé"
+    "Cannot locate the installed add-on": "Impossible de localiser l’add-on installé",
+    "The manual opens in your default browser, fully offline. It includes guides, images, diagrams and public API reference.": "Le manuel s’ouvre dans votre navigateur par défaut, entièrement hors ligne. Il contient guides, images, schémas et référence de l’API publique."
   }
 }

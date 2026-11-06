@@ -639,7 +639,7 @@ void overlay(effect_runtime *runtime) {
     auto ui_label = [&](const char *message) { return i18n::label(s.language, message); };
     auto context_help = [&](const char *page) {
         ImGui::PushID(page);
-        if (ImGui::SmallButton(ui_label("Help for this page").c_str())) {
+        if (ImGui::SmallButton(ui_label("Help for this page").c_str()) || (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) && ImGui::IsKeyPressed(ImGuiKey_F1, false))) {
             try { manual::launch(addon_module, s.language, s.manual, page); }
             catch (const std::exception &e) { s.manual.open_error = e.what(); }
         }

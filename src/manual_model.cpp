@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <stdexcept>
 #include <vector>
+#include <utility>
 
 namespace cyrs::manual {
 const nlohmann::json &document(std::string language) {
@@ -28,24 +29,40 @@ const nlohmann::json &document(std::string language) {
     throw std::runtime_error("English CyDoc catalog is missing");
 }
 
+namespace {
+std::pair<std::string, std::string> canonical_target(const nlohmann::json &book, std::string id, std::string anchor) {
+    const auto aliases = book.find("aliases");
+    for (size_t depth = 0; aliases != book.end() && aliases->contains(id) && depth < aliases->size() + 1; ++depth) {
+        const auto value = aliases->at(id).get<std::string>();
+        const auto hash = value.find('#');
+        id = value.substr(0, hash);
+        if (hash != std::string::npos) anchor = value.substr(hash + 1);
+    }
+    return {id, anchor};
+}
+}
+
 const nlohmann::json *page(const nlohmann::json &book, std::string_view id) {
+    const auto resolved = canonical_target(book, std::string(id), "");
+    id = resolved.first;
     for (const auto &entry : book.at("pages")) if (entry.at("id").get_ref<const std::string &>() == id) return &entry;
     return nullptr;
 }
 bool valid_target(const nlohmann::json &book, const std::string &id, const std::string &anchor, const std::string &media) {
-    const auto *target = page(book, id);
+    const auto resolved = canonical_target(book, id, anchor);
+    const auto *target = page(book, resolved.first);
     if (!target) return false;
-    if (!anchor.empty()) {
+    if (!resolved.second.empty()) {
         bool found = false;
-        for (const auto &heading : target->at("headings")) if (heading.at("id") == anchor) found = true;
-        for (const auto &item : target->value("anchors", nlohmann::json::array())) if (item == anchor) found = true;
+        for (const auto &heading : target->at("headings")) if (heading.at("id") == resolved.second) found = true;
+        for (const auto &item : target->value("anchors", nlohmann::json::array())) if (item == resolved.second) found = true;
         if (!found) return false;
     }
     if (!media.empty() && std::find(target->at("media").begin(), target->at("media").end(), media) == target->at("media").end()) return false;
     return true;
 }
 std::filesystem::path html_path(const std::filesystem::path &addon, const std::string &) {
-    return addon.parent_path() / L"CyRSAssistant" / L"Documentation" / L"index.html";
+    return addon.parent_path() / L"CyRSAssistant" / L"Documentation" / L"Documentation.html";
 }
 namespace {
 std::string encode(std::string_view value) {
@@ -68,8 +85,9 @@ std::wstring help_url(const std::filesystem::path &addon, const std::string &lan
     if (FAILED(UrlCreateFromPathW(path.c_str(), buffer.data(), &count, 0)))
         throw std::runtime_error("Cannot encode the local documentation file URL");
     std::wstring url(buffer.data());
-    std::string route = "#/" + encode(book.at("code").get<std::string>()) + "/" + encode(id);
-    if (!anchor.empty()) route += "/" + encode(anchor);
+    const auto resolved = canonical_target(book, id, anchor);
+    std::string route = "#/" + encode(book.at("code").get<std::string>()) + "/" + encode(resolved.first);
+    if (!resolved.second.empty()) route += "/" + encode(resolved.second);
     bool first = true;
     const auto add = [&](const char *key, const std::string &value) {
         if (!value.empty()) { route += first ? '?' : '&'; first = false; route += key; route += "=" + encode(value); }

@@ -33,7 +33,7 @@ void draw(HMODULE module, const std::string &language, State &state) {
     const auto *selected = page(book, state.selected);
     if (!selected) { state.selected = "start"; selected = page(book, state.selected); }
     ImGui::TextWrapped("%s", tr("CyDoc - local illustrated documentation"));
-    ImGui::TextWrapped("%s", tr("The manual opens in your default browser, fully offline. It includes guides, images, diagrams, API reference and distributed source code."));
+    ImGui::TextWrapped("%s", tr("The manual opens in your default browser, fully offline. It includes guides, images, diagrams and public API reference."));
     if (ImGui::BeginCombo(label("Help topic").c_str(), selected->at("title").get_ref<const std::string &>().c_str())) {
         for (const auto &entry : book.at("pages")) {
             if (entry.value("kind", "") == "source") continue;
@@ -43,7 +43,7 @@ void draw(HMODULE module, const std::string &language, State &state) {
         ImGui::EndCombo();
     }
     ImGui::InputText(label("Search documentation").c_str(), state.query.data(), state.query.size());
-    if (ImGui::Button(label("Open documentation").c_str())) {
+    if (ImGui::Button(label("Open documentation").c_str()) || (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) && ImGui::IsKeyPressed(ImGuiKey_F1, false))) {
         try { launch(module, language, state, state.selected, {}, {}, state.query.data()); }
         catch (const std::exception &e) { state.open_error = e.what(); }
     }

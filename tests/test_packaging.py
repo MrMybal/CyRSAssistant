@@ -19,15 +19,16 @@ class PackagingTests(unittest.TestCase):
         self.root = Path(self.temp.name)
         source = delivery.ROOT
         shutil.copytree(source / "LICENCES", self.root / "LICENCES")
-        for folder in ("src", "companion", "tools", "tests", "assets", "docs"):
+        for folder in ("src", "companion", "tools", "tests", "assets"):
             (self.root / folder).mkdir()
             (self.root / folder / "example.txt").write_text("example")
-        shutil.copytree(source / "docs/content", self.root / "docs/content")
-        shutil.copytree(source / "build/help", self.root / "build/help")
-        shutil.copytree(source / "vendor", self.root / "vendor")
+        shutil.copytree(source / ".CyDocBuild", self.root / ".CyDocBuild", ignore=shutil.ignore_patterns("node_modules", "generated", "internal"))
+        shutil.copytree(source / "Documentation", self.root / "Documentation")
+        (self.root / ".CyDocBuild/internal").mkdir()
+        (self.root / ".CyDocBuild/internal/private.txt").write_text("private working record")
         shutil.copytree(source / "assets/screenshots", self.root / "assets/screenshots")
         shutil.copyfile(source / "assets/cyrsassistant-logo-turquoise.png", self.root / "assets/cyrsassistant-logo-turquoise.png")
-        for name in ("LICENSE", "THIRD_PARTY.md", "README.md", "README.fr.md", "CMakeLists.txt", "package.json", "package-lock.json", "cydoc.config.json"):
+        for name in ("LICENSE", "THIRD_PARTY.md", "README.md", "README.fr.md", "CMakeLists.txt"):
             shutil.copyfile(source / name, self.root / name)
         for name in ("runtime-licenses.lock.json", "dependencies.lock.json"):
             shutil.copyfile(source / "tools" / name, self.root / "tools" / name)
@@ -58,7 +59,7 @@ class PackagingTests(unittest.TestCase):
         self.save_manifest()
         self.addCleanup(patch.stopall)
         patch.object(delivery, "ROOT", self.root).start()
-        patch.object(delivery, "validate_help", return_value=self.root / "build/help").start()
+        patch.object(delivery, "validate_help", return_value=self.root / "Documentation").start()
 
     def save_manifest(self):
         self.service.with_suffix(".build.json").write_text(json.dumps(self.manifest))
@@ -77,15 +78,18 @@ class PackagingTests(unittest.TestCase):
             self.assertIn("FRAN\u00c7AIS", archive.read("CyRSAssistant/INSTALL.txt").decode("utf-8"))
             self.assertIn("LICENCES/AssistantRuntime-Notices.txt", archive.namelist())
             self.assertNotIn("CyRSAssistantCompanion.build.json", archive.namelist())
+            self.assertTrue(all(".CyDocBuild" not in name for name in archive.namelist()))
+            self.assertIn("CyRSAssistant/Documentation/Documentation.html", archive.namelist())
+            self.assertIn("CyRSAssistant/Documentation/DocAI.md", archive.namelist())
             for language in ("en", "fr"):
                 page = "CyRSAssistant/Documentation/index." + language + ".html"
                 self.assertIn(page, archive.namelist())
                 self.assertIn(('lang="' + language + '"').encode(), archive.read(page))
-            self.assertIn("CyRSAssistant/Documentation/assets/screenshots/chat-preview.png", archive.namelist())
-            self.assertIn("CyRSAssistant/Documentation/media-image.js", archive.namelist())
-            self.assertNotIn("CyRSAssistant/Documentation/media-mesh.js", archive.namelist())
-            self.assertIn(b"CyDoc", archive.read("CyRSAssistant/Documentation/LICENSE.CyDoc.txt"))
-            self.assertEqual(archive.read("CyRSAssistant/Documentation/manifest.json"), (self.root / "build/help/manifest.json").read_bytes())
+            self.assertIn("CyRSAssistant/Documentation/DocData/assets/screenshots/chat-preview.png", archive.namelist())
+            self.assertIn("CyRSAssistant/Documentation/DocData/media-image.js", archive.namelist())
+            self.assertNotIn("CyRSAssistant/Documentation/DocData/media-mesh.js", archive.namelist())
+            self.assertIn(b"CyDoc", archive.read("CyRSAssistant/Documentation/DocData/LICENSE.CyDoc.txt"))
+            self.assertEqual(archive.read("CyRSAssistant/Documentation/DocData/manifest.json"), (self.root / "Documentation/DocData/manifest.json").read_bytes())
 
     def test_developer_zip_contains_notices_with_buildable_sources(self):
         prefix = f"CyRSAssistant-{delivery.VERSION}/"
@@ -93,8 +97,9 @@ class PackagingTests(unittest.TestCase):
             for name in delivery.REQUIRED_LICENSES:
                 self.assertEqual(archive.read(prefix + "LICENCES/" + name), archive.read(prefix + "source/LICENCES/" + name))
             self.assertIn(prefix + "source/tools/runtime-licenses.lock.json", archive.namelist())
-            for item in ("cydoc.config.json", "package.json", "package-lock.json", "vendor/cydoc/cydoc-0.1.0.tgz"):
-                self.assertIn(prefix + "source/" + item, archive.namelist())
+            self.assertTrue(all("/internal/" not in name for name in archive.namelist()))
+            for item in ("cydoc.config.json", "package.json", "package-lock.json", "vendor/cydoc-0.1.0.tgz"):
+                self.assertIn(prefix + "source/.CyDocBuild/" + item, archive.namelist())
 
     def test_user_configuration_and_catalog_are_preserved_and_excluded(self):
         private = {"ReShade.ini": b"[CYRSASSISTANT]\nLanguage=fr\nPermissionMode=1\n",

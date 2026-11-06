@@ -39,5 +39,5 @@ They do not replace the included copyright and license notices.
 
 CyDoc 0.1.0
 https://github.com/MrMybal/CyDoc
-Commit: 774f2a7eabf7dd181a98ffc5add115b580b67f42
-License: MIT (CyDoc.txt). Matching local package: source/vendor/cydoc/cydoc-0.1.0.tgz in the developer ZIP.
+Commit: 6ddf9a582defb2f11fbb3f992afef6f98dcadc93
+License: MIT (CyDoc.txt). Matching local package: source/.CyDocBuild/vendor/cydoc-0.1.0.tgz in the developer ZIP.

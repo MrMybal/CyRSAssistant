@@ -1,0 +1,5 @@
+.cydoc-viewer[data-theme="nord"] { --accent:#40d6c9; --accent-bg:#193a40; --accent-text:#74eee0; }
+.diagram { max-width:100%; overflow:auto; }
+.diagram svg { max-width:100%; height:auto; }
+.code-block code.language-text .code-line { white-space:pre-wrap; overflow-wrap:anywhere; }
+@media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } }

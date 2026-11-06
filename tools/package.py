@@ -8,12 +8,14 @@ import shutil
 import tempfile
 import zipfile
 
-try:
-    from .build_help import validate as validate_help
-except ImportError:
-    from build_help import validate as validate_help
+import importlib.util
 
 ROOT = Path(__file__).resolve().parents[1]
+_help_spec = importlib.util.spec_from_file_location("cyrs_documentation_build", ROOT / ".CyDocBuild/build.py")
+_help_module = importlib.util.module_from_spec(_help_spec)
+_help_spec.loader.exec_module(_help_module)
+validate_help = _help_module.validate
+
 VERSION = re.search(r"project\(CyRSAssistant VERSION ([0-9.]+)", (ROOT / "CMakeLists.txt").read_text(encoding="utf-8-sig")).group(1)
 RUNTIME_FILES = ("dxcompiler.dll", "dxil.dll", "LICENSE-LLVM.txt", "LICENSE-MS.txt")
 
@@ -95,7 +97,9 @@ Requires ReShade 6.8 with full add-on support in a 64-bit Windows game.
 5. Write in Chat and click Send, or use Ctrl+Enter.
 6. Open Help > Open documentation for the complete local CyDoc manual,
    or use a contextual Help button. It opens the matching language/page via
-   file:// in your default browser. Keep the entire Documentation folder.
+   file:// in your default browser. You can also open
+   CyRSAssistant/Documentation/Documentation.html directly. Keep its DocData
+   folder and DocAI.md sidecar with it.
 
 The interface defaults to English. French is available in Options > Language.
 The language and permission mode are remembered per game. API keys are kept
@@ -120,7 +124,8 @@ Windows 64 bits.
 6. Écrivez dans Tchat et cliquez sur Envoyer, ou utilisez Ctrl+Entrée.
 7. Ouvrez Aide > Ouvrir la documentation, ou un bouton d'aide contextuel.
    CyDoc ouvre la bonne langue/page via file:// dans le navigateur par défaut.
-   Conservez le dossier Documentation complet avec tous ses fichiers.
+   Vous pouvez aussi ouvrir CyRSAssistant/Documentation/Documentation.html.
+   Conservez DocData et DocAI.md avec ce fichier.
 
 La langue et les autorisations sont mémorisées par jeu. Les clés API restent
 uniquement en mémoire pour la session. Ce ZIP ne contient pas de preset et
@@ -182,16 +187,18 @@ def package(install=False):
             for name in ("README.md", "README.fr.md"):
                 shutil.copy2(ROOT / name, destination / name)
             shutil.copytree(ROOT / "companion", destination / "companion", ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
-            shutil.copytree(ROOT / "docs", destination / "docs", ignore=shutil.ignore_patterns("validation-*.md"))
             for module, name in (("companion.mcp", "run_mcp.py"), ("companion", "run_companion.py")):
                 (destination / name).write_text(f'import runpy\nrunpy.run_module("{module}", run_name="__main__")\n', encoding="utf-8")
             sources = destination / "source"
             sources.mkdir()
-            for name in ("src", "companion", "tools", "tests", "assets", "LICENCES", "vendor"):
+            for name in ("src", "companion", "tools", "tests", "assets", "LICENCES"):
                 shutil.copytree(ROOT / name, sources / name, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
-            for name in ("CMakeLists.txt", "README.md", "README.fr.md", "LICENSE", "THIRD_PARTY.md", "package.json", "package-lock.json", "cydoc.config.json"):
+            for name in ("CMakeLists.txt", "README.md", "README.fr.md", "LICENSE", "THIRD_PARTY.md"):
                 shutil.copy2(ROOT / name, sources / name)
-            shutil.copytree(destination / "docs", sources / "docs")
+            # Documentation authoring inputs belong only to the dedicated source
+            # tree; never copy private work records into a distributable manual.
+            shutil.copytree(ROOT / ".CyDocBuild", sources / ".CyDocBuild",
+                            ignore=shutil.ignore_patterns("node_modules", "generated", "internal", "cydoc.build-config.json", "__pycache__", "*.pyc"))
         with zipfile.ZipFile(archive_path, "w", zipfile.ZIP_DEFLATED) as archive:
             base = destination if install else destination.parent
             for path in sorted(destination.rglob("*")):

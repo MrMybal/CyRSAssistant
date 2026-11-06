@@ -15,17 +15,17 @@ add_custom_command(OUTPUT "${CYRS_LOCALE_HEADER}"
   VERBATIM)
 add_custom_target(cyrs_locales DEPENDS "${CYRS_LOCALE_HEADER}")
 file(GLOB_RECURSE CYRS_HELP_INPUTS CONFIGURE_DEPENDS
-  "${CMAKE_SOURCE_DIR}/docs/content/*.md" "${CMAKE_SOURCE_DIR}/assets/*"
-  "${CMAKE_SOURCE_DIR}/src/*.cpp" "${CMAKE_SOURCE_DIR}/src/*.hpp" "${CMAKE_SOURCE_DIR}/src/*.h" "${CMAKE_SOURCE_DIR}/src/*.rc.in"
-  "${CMAKE_SOURCE_DIR}/companion/*.py" "${CMAKE_SOURCE_DIR}/companion/locales/*.json")
+  "${CMAKE_SOURCE_DIR}/.CyDocBuild/manual/*.md" "${CMAKE_SOURCE_DIR}/.CyDocBuild/assets/*")
 set(CYRS_MANUAL_HEADER "${CMAKE_BINARY_DIR}/generated/manual_data.hpp")
-add_custom_command(OUTPUT "${CYRS_MANUAL_HEADER}" "${CMAKE_SOURCE_DIR}/build/help/index.html"
-  COMMAND "${Python3_EXECUTABLE}" "${CMAKE_SOURCE_DIR}/tools/build_help.py" --header "${CYRS_MANUAL_HEADER}"
-  DEPENDS ${CYRS_HELP_INPUTS} cydoc.config.json package.json package-lock.json CMakeLists.txt
-    tools/build_help.py tools/export_help.mjs tools/docs_reader.mjs tools/help_redirect.mjs
-    tools/cydoc.lock.json docs/reader.html docs/reader.css vendor/cydoc/cydoc-0.1.0.tgz
+add_custom_command(OUTPUT "${CYRS_MANUAL_HEADER}" "${CMAKE_SOURCE_DIR}/Documentation/Documentation.html"
+  COMMAND "${Python3_EXECUTABLE}" "${CMAKE_SOURCE_DIR}/.CyDocBuild/build.py" --header "${CYRS_MANUAL_HEADER}"
+  DEPENDS ${CYRS_HELP_INPUTS} CMakeLists.txt companion/transport.py
+    .CyDocBuild/cydoc.config.json .CyDocBuild/cydoc.lock.json .CyDocBuild/package.json .CyDocBuild/package-lock.json
+    .CyDocBuild/build.py .CyDocBuild/export.mjs .CyDocBuild/check.mjs .CyDocBuild/api-revisions.json
+    .CyDocBuild/reader.mjs .CyDocBuild/redirect.mjs .CyDocBuild/reader.html .CyDocBuild/reader.css
+    .CyDocBuild/vendor/cydoc-0.1.0.tgz
   VERBATIM)
-add_custom_target(cyrs_manual DEPENDS "${CYRS_MANUAL_HEADER}" "${CMAKE_SOURCE_DIR}/build/help/index.html")
+add_custom_target(cyrs_manual DEPENDS "${CYRS_MANUAL_HEADER}" "${CMAKE_SOURCE_DIR}/Documentation/Documentation.html")
 configure_file(src/resources.rc.in "${CMAKE_BINARY_DIR}/generated/resources.rc" @ONLY)
 add_library(CyRSAssistant SHARED "${CMAKE_BINARY_DIR}/generated/resources.rc" src/branding.cpp src/manual.cpp src/manual_model.cpp src/addon.cpp src/bridge.cpp src/shader_tools.cpp src/dxc_tools.cpp src/pipeline_snapshot.cpp src/shader_lab.cpp)
 add_dependencies(CyRSAssistant cyrs_locales cyrs_manual)

@@ -5,28 +5,16 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/pages.yml'
-      - 'docs/**'
-      - 'assets/cyrsassistant-logo-turquoise.png'
-      - 'assets/screenshots/**'
-      - 'cydoc.config.json'
-      - 'package*.json'
-      - 'vendor/cydoc/**'
-      - 'tools/*help*'
-      - 'tools/*pages*'
-      - 'tools/cydoc.lock.json'
-      - 'tools/docs_reader.mjs'
-      - 'tests/manual_browser_smoke.mjs'
+      - '.CyDocBuild/**'
+      - 'companion/transport.py'
+      - 'CMakeLists.txt'
       - 'README*.md'
   pull_request:
     paths:
       - '.github/workflows/pages.yml'
-      - 'docs/**'
-      - 'assets/**'
-      - 'cydoc.config.json'
-      - 'package*.json'
-      - 'vendor/cydoc/**'
-      - 'tools/**'
-      - 'tests/manual_browser_smoke.mjs'
+      - '.CyDocBuild/**'
+      - 'companion/transport.py'
+      - 'CMakeLists.txt'
       - 'README*.md'
   workflow_dispatch:
 
@@ -53,19 +41,20 @@ jobs:
         with:
           node-version: '22'
           cache: npm
+          cache-dependency-path: .CyDocBuild/package-lock.json
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: '3.12'
       - name: Install pinned documentation dependencies
-        run: npm ci --omit=peer
+        run: npm --prefix .CyDocBuild ci --omit=peer
       - name: Generate and check the complete CyDoc export
-        run: npm run docs:pages
+        run: npm --prefix .CyDocBuild run docs:pages
       - name: Exercise the reader offline and under a project URL
         env:
           CHROME_PATH: /usr/bin/google-chrome
         run: |
-          node tests/manual_browser_smoke.mjs build/pages-project/site
-          node tests/manual_browser_smoke.mjs build/pages-project/site --http
+          node .CyDocBuild/tests/browser_smoke.mjs Documentation
+          node .CyDocBuild/tests/browser_smoke.mjs Documentation --http
       - name: Check repository history and the published artifact
         shell: bash
         run: |
@@ -75,7 +64,7 @@ jobs:
           echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  $archive" | sha256sum --check
           tar -xzf "$archive" -C "$RUNNER_TEMP" gitleaks
           "$RUNNER_TEMP/gitleaks" git . --redact --no-banner --log-opts="--all"
-          "$RUNNER_TEMP/gitleaks" dir build/pages-project/site --redact --no-banner
+          "$RUNNER_TEMP/gitleaks" dir Documentation --redact --no-banner
       - name: Configure GitHub Pages
         if: github.event_name != 'pull_request'
         uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
@@ -83,7 +72,7 @@ jobs:
         if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
         with:
-          path: build/pages-project/site
+          path: Documentation
 
   deploy:
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
@@ -118,5 +107,5 @@ jobs:
         env:
           CHROME_PATH: /usr/bin/google-chrome
         run: |
-          node tests/manual_browser_smoke.mjs https://mrmybal.github.io/CyRSAssistant/ --readme=en
-          node tests/manual_browser_smoke.mjs https://mrmybal.github.io/CyRSAssistant/ --readme=fr
+          node .CyDocBuild/tests/browser_smoke.mjs https://mrmybal.github.io/CyRSAssistant/ --readme=en
+          node .CyDocBuild/tests/browser_smoke.mjs https://mrmybal.github.io/CyRSAssistant/ --readme=fr

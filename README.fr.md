@@ -6,7 +6,7 @@
 
 [English](README.md) | Français
 
-**[Documentation](https://mrmybal.github.io/CyRSAssistant/#/fr/start)** — manuel français avec recherche, images et schémas. Il décrit la version de développement 0.9.0 ; vérifiez la version indiquée pour comparer avec une release. L’aide hors ligne reste incluse dans les paquets de l’application.
+**[Documentation](https://mrmybal.github.io/CyRSAssistant/Documentation.html#/fr/start)** — manuel français avec recherche, images et schémas. Il décrit la version 0.9.0. L’aide hors ligne reste incluse dans les paquets de l’application.
 
 Assistant intégré à ReShade : décrire le rendu souhaité, exploiter les effets installés, régler un preset en direct et créer des effets adaptés. Les capacités avancées visent l'inspection du rendu, le masquage du HUD et le remplacement ciblé de shaders du jeu.
 
@@ -14,15 +14,15 @@ Assistant intégré à ReShade : décrire le rendu souhaité, exploiter les effe
 
 ## Aide CyDoc intégrée
 
-Ouvrez **CyRSAssistant > Aide > Ouvrir la documentation**, ou un bouton d’aide contextuel. Le lecteur fourni s’ouvre via **file://**, en anglais par défaut ou en français selon Options. Il comprend les 21 chapitres utilisateur, les références techniques, exemples et index C++/Python. Les images s’agrandissent dans le lecteur ; les schémas statiques sont compilés en SVG. CyDoc apporte recherche, clavier/tactile, copie du code, positions de lecture et impression.
+Ouvrez **CyRSAssistant > Aide > Ouvrir la documentation**, ou un bouton d’aide contextuel. Le lecteur fourni s’ouvre via **file://**, en anglais par défaut ou en français selon Options. Il comprend 26 pages par langue : guides utilisateur, références de l’API publique et exemples courts. Les images s’agrandissent dans le lecteur ; les schémas statiques sont compilés en SVG. CyDoc apporte recherche, clavier/tactile, copie du code, positions de lecture et impression.
 
-Conservez tout **CyRSAssistant/Documentation**. Aucun serveur, CDN, Internet, Node.js ou installation de lecteur n’est requis pour lire. Les anciens liens index.en.html/index.fr.html redirigent localement. Seul le module **image** est livré, sans Three.js. Génération : npm ci --omit=peer, puis npm run docs:build / npm run docs:check. [Guide de maintenance](docs/content/fr/authoring.md).
+Conservez tout **CyRSAssistant/Documentation**, avec **Documentation.html**, **DocAI.md** et **DocData/**. Aucun serveur, CDN, Internet, Node.js ou installation de lecteur n’est requis pour lire. Les anciens liens index.en.html/index.fr.html redirigent localement. Seul le module **image** est livré, sans Three.js.
 
 ## Langue
 
 L’interface démarre en anglais. Ouvrez **Options > Language** et choisissez **Français**. Le choix est mémorisé par jeu et s’applique sans redémarrage. Les nouvelles réponses de l’IA utilisent cette langue, sauf demande explicite d’une autre langue. Les messages existants restent inchangés.
 
-Pour ajouter une langue, voir [le guide de traduction](docs/localization.md).
+Pour les langues disponibles, voir [les outils de langue et de lecture](https://mrmybal.github.io/CyRSAssistant/#/fr/localization).
 
 ## Disponible
 
@@ -48,17 +48,17 @@ Captures de versions de développement antérieures, avec l’interface en fran�
 
 ## Démarrage
 
-Téléchargez **CyRSAssistant-0.9.0-windows-x64.zip** depuis les [releases](https://github.com/MrMybal/CyRSAssistant/releases) une fois publiée, ou produisez-le localement avec `python tools/package.py --install`. Fermez le jeu et extrayez le ZIP à côté de la DLL ReShade, en conservant les sous-dossiers. Les fichiers de l’add-on sont directement à la racine du ZIP et Python est intégré.
+Téléchargez [**CyRSAssistant-0.9.0-windows-x64.zip**](https://github.com/MrMybal/CyRSAssistant/releases/download/v0.9.0/CyRSAssistant-0.9.0-windows-x64.zip) depuis la [release v0.9.0](https://github.com/MrMybal/CyRSAssistant/releases/tag/v0.9.0), ou produisez-le localement avec `python tools/package.py --install`. Fermez le jeu et extrayez le ZIP à côté de la DLL ReShade, en conservant les sous-dossiers. Les fichiers de l’add-on sont directement à la racine du ZIP et Python est intégré.
 
 Pour produire ce ZIP : `python tools/package.py --install`.
 
-Voir [le guide d'installation et de connexion](docs/getting-started.fr.md). Le paquet avec sources est produit dans `dist/CyRSAssistant-0.9.0.zip` avec `python tools/package.py`.
+Voir [le guide d'installation et de connexion](https://mrmybal.github.io/CyRSAssistant/#/fr/install). Le paquet avec sources est produit dans `dist/CyRSAssistant-0.9.0.zip` avec `python tools/package.py`.
 
-Compilation depuis les sources (Visual Studio 2022 C++, Windows SDK et Python 3.11.5 pour créer `build/packaging-env`) :
+Compilation depuis les sources (Visual Studio 2022 C++, Windows SDK, Node.js 22 ou ultérieur pour générer la documentation et Python 3.11.5 pour créer `build/packaging-env`) :
 
 ```powershell
 python tools/bootstrap.py
-npm ci --omit=peer
+npm --prefix .CyDocBuild ci --omit=peer
 python tools/build.py
 python -m venv build/packaging-env
 build/packaging-env/Scripts/python.exe -m pip install pyinstaller==6.20.0
@@ -75,7 +75,7 @@ Pas encore de téléchargement de packs, analyse automatique d’images ni ident
 
 Le connecteur HTTP nécessite une URL, un modèle et, selon le fournisseur, une clé API. Codex et Claude utilisent la session authentifiée de leur CLI installé. Le statut distingue la session locale reconnue d’une réponse effective du modèle. OpenCode et Antigravity peuvent utiliser MCP depuis leur interface ; ils n’ont pas encore de connecteur direct dans le panneau. MCP fournit une autre voie : les agents appellent les outils depuis leur propre interface ; leur conversation n'est pas automatiquement recopiée dans le panneau ReShade.
 
-Voir [l'architecture et les étapes de réalisation](docs/architecture.md).
+Voir [le fonctionnement de l’assistant](https://mrmybal.github.io/CyRSAssistant/#/fr/architecture).
 
 ## DX12 et runtime DXC
 

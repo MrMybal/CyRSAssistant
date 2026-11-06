@@ -18,4 +18,4 @@ CyToolsCore and CyUEMCPSDK are not included or required by this ReShade add-on. 
 
 The DXC notices also remain alongside its DLLs in `CyRSAssistantRuntime/`. In the install ZIP, this document and the original product `LICENSE` are in `CyRSAssistant/`; their central notices folder is `../LICENCES/`.
 
-CyDoc is pinned by commit and package SHA-256 in tools/cydoc.lock.json. Its MIT notice is also included in the complete offline export. Node.js, marked, PrismJS and esbuild are generation dependencies, not installed application runtimes. Only the image module is shipped; no Three.js runtime is included.
+CyDoc is pinned by commit and package SHA-256 in .CyDocBuild/cydoc.lock.json. Its MIT notice is also included in the complete offline export. Node.js, marked, PrismJS and esbuild are generation dependencies, not installed application runtimes. Only the image module is shipped; no Three.js runtime is included.

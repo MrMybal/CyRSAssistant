@@ -1,0 +1,19 @@
+{
+  "name": "cyrsassistant-documentation",
+  "version": "0.9.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "docs:build": "python build.py",
+    "docs:check": "python build.py --check",
+    "docs:pages": "python build.py --check",
+    "docs:validate": "node check.mjs ../Documentation"
+  },
+  "devDependencies": {
+    "cydoc": "file:vendor/cydoc-0.1.0.tgz",
+    "esbuild": "0.25.12"
+  }
+}

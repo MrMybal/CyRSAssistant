@@ -6,7 +6,7 @@
 
 English | [Français](README.fr.md)
 
-**[Documentation](https://mrmybal.github.io/CyRSAssistant/#/en/start)** — searchable English manual, images and diagrams. It documents development version 0.9.0; use the version shown in the manual when comparing with a release. Offline help remains included in application packages.
+**[Documentation](https://mrmybal.github.io/CyRSAssistant/Documentation.html#/en/start)** — searchable English manual, images and diagrams. It covers version 0.9.0. Offline help remains included in application packages.
 
 An AI assistant inside ReShade. Chat about the look you want, inspect installed effects and their actual parameters, adjust a preset, generate effects and replace selected game shaders.
 
@@ -14,15 +14,15 @@ Version 0.9.0 is a Windows x64 prototype built against ReShade 6.8 / API 20. FX 
 
 ## Built-in CyDoc help
 
-Open **CyRSAssistant > Help > Open documentation**, or use a contextual Help button. The bundled reader opens via **file://**, in English by default or French following Options. It includes the 21 user-guide chapters, developer references, code examples and a C++/Python source index. Images enlarge inside the reader; static diagrams are compiled to SVG. Search, keyboard/touch navigation, code copying, reading positions and printing are provided by CyDoc.
+Open **CyRSAssistant > Help > Open documentation**, or use a contextual Help button. The bundled reader opens via **file://**, in English by default or French following Options. It includes 26 pages per language: user guides, public API references and short code examples. Images enlarge inside the reader; static diagrams are compiled to SVG. Search, keyboard/touch navigation, code copying, reading positions and printing are provided by CyDoc.
 
-Keep the complete **CyRSAssistant/Documentation** directory. No server, CDN, Internet, Node.js or separate reader installation is required to read it. Old index.en.html/index.fr.html links redirect locally. Only the **image** module is shipped; no Three.js. Build with npm ci --omit=peer then npm run docs:build / npm run docs:check. [Authoring guide](docs/content/en/authoring.md).
+Keep the complete **CyRSAssistant/Documentation** directory, including **Documentation.html**, **DocAI.md** and **DocData/**. No server, CDN, Internet, Node.js or separate reader installation is required to read it. Old index.en.html/index.fr.html links redirect locally. Only the **image** module is shipped; no Three.js.
 
 ## Language
 
 The interface defaults to **English**. Select **Options > Language > Français** to switch to French. The setting is saved for this game and takes effect without restarting. New assistant responses use the selected language unless you explicitly request another language. Existing conversation messages remain unchanged; an ongoing request finishes in its original language.
 
-Translations for the overlay and companion share JSON catalogs. See [Adding a language](docs/localization.md).
+Translations for the overlay and companion share JSON catalogs. See [Language and reading controls](https://mrmybal.github.io/CyRSAssistant/#/en/localization).
 
 ## Features
 
@@ -48,9 +48,9 @@ Screenshots from earlier development builds, with the interface in French.
 
 ## Get started
 
-Download **CyRSAssistant-0.9.0-windows-x64.zip** from the [releases page](https://github.com/MrMybal/CyRSAssistant/releases) when published, or build it locally with `python tools/package.py --install`. Close the game and extract it next to the ReShade DLL, keeping the folders. The add-on, companion and runtime folder are already at the ZIP root; Python is bundled.
+Download [**CyRSAssistant-0.9.0-windows-x64.zip**](https://github.com/MrMybal/CyRSAssistant/releases/download/v0.9.0/CyRSAssistant-0.9.0-windows-x64.zip) from [release v0.9.0](https://github.com/MrMybal/CyRSAssistant/releases/tag/v0.9.0), or build it locally with `python tools/package.py --install`. Close the game and extract it next to the ReShade DLL, keeping the folders. The add-on, companion and runtime folder are already at the ZIP root; Python is bundled.
 
-Read the [installation and connection guide](docs/getting-started.md). No terminal is needed for normal use from ReShade.
+Read the [installation and connection guide](https://mrmybal.github.io/CyRSAssistant/#/en/install). No terminal is needed for normal use from ReShade.
 
 In **Options > Permission mode**, choose:
 
@@ -62,11 +62,11 @@ These permissions cover this add-on's tools. They do not grant a terminal or arb
 
 ## Build
 
-Requires Windows x64, Visual Studio 2022 with C++ and Windows SDK. The companion distribution uses Python 3.11.5 and PyInstaller 6.20.0; use Python 3.11.5 to create `build/packaging-env`. The build verifies the interpreter and matching license texts before freezing.
+Requires Windows x64, Visual Studio 2022 with C++, Windows SDK and Node.js 22 or later for generating the documentation. The companion distribution uses Python 3.11.5 and PyInstaller 6.20.0; use Python 3.11.5 to create `build/packaging-env`. The build verifies the interpreter and matching license texts before freezing.
 
 ```powershell
 python tools/bootstrap.py
-npm ci --omit=peer
+npm --prefix .CyDocBuild ci --omit=peer
 python tools/build.py
 python -m venv build/packaging-env
 build/packaging-env/Scripts/python.exe -m pip install pyinstaller==6.20.0
@@ -93,4 +93,4 @@ The API key stays in memory for the current session. Provider, model, endpoint, 
 
 ## License
 
-CyRSAssistant by Cyberalien is licensed under GPL-3.0-only. See [LICENSE](LICENSE), [THIRD_PARTY.md](THIRD_PARTY.md) and [LICENCES/SOURCES.txt](LICENCES/SOURCES.txt). Every distribution includes the complete license folder at its root. See [installation and rollback](docs/getting-started.md#updating-and-rolling-back) before updating an existing game.
+CyRSAssistant by Cyberalien is licensed under GPL-3.0-only. See [LICENSE](LICENSE), [THIRD_PARTY.md](THIRD_PARTY.md) and [LICENCES/SOURCES.txt](LICENCES/SOURCES.txt). Every distribution includes the complete license folder at its root. See [installation and rollback](https://mrmybal.github.io/CyRSAssistant/#/en/update/overview) before updating an existing game.
