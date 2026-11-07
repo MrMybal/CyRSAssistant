@@ -28,7 +28,7 @@ class PackagingTests(unittest.TestCase):
         (self.root / ".CyDocBuild/internal/private.txt").write_text("private working record")
         shutil.copytree(source / "assets/screenshots", self.root / "assets/screenshots")
         shutil.copyfile(source / "assets/cyrsassistant-logo-turquoise.png", self.root / "assets/cyrsassistant-logo-turquoise.png")
-        for name in ("LICENSE", "THIRD_PARTY.md", "README.md", "README.fr.md", "CMakeLists.txt"):
+        for name in ("LICENSE", "THIRD_PARTY.md", "README.md", "README.fr.md", "VERSION.md", "VERSION.fr.md", "CMakeLists.txt"):
             shutil.copyfile(source / name, self.root / name)
         for name in ("runtime-licenses.lock.json", "dependencies.lock.json"):
             shutil.copyfile(source / "tools" / name, self.root / "tools" / name)
@@ -97,6 +97,9 @@ class PackagingTests(unittest.TestCase):
             for name in delivery.REQUIRED_LICENSES:
                 self.assertEqual(archive.read(prefix + "LICENCES/" + name), archive.read(prefix + "source/LICENCES/" + name))
             self.assertIn(prefix + "source/tools/runtime-licenses.lock.json", archive.namelist())
+            for name in ("VERSION.md", "VERSION.fr.md"):
+                self.assertEqual(archive.read(prefix + name), (self.root / name).read_bytes())
+                self.assertEqual(archive.read(prefix + "source/" + name), (self.root / name).read_bytes())
             self.assertTrue(all("/internal/" not in name for name in archive.namelist()))
             for item in ("cydoc.config.json", "package.json", "package-lock.json", "vendor/cydoc-0.1.0.tgz"):
                 self.assertIn(prefix + "source/.CyDocBuild/" + item, archive.namelist())

@@ -184,7 +184,7 @@ def package(install=False):
             (metadata / "INSTALL.txt").write_text(installation_notes(), encoding="utf-8")
         else:
             shutil.copytree(ROOT / "assets", destination / "assets")
-            for name in ("README.md", "README.fr.md"):
+            for name in ("README.md", "README.fr.md", "VERSION.md", "VERSION.fr.md"):
                 shutil.copy2(ROOT / name, destination / name)
             shutil.copytree(ROOT / "companion", destination / "companion", ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
             for module, name in (("companion.mcp", "run_mcp.py"), ("companion", "run_companion.py")):
@@ -193,7 +193,7 @@ def package(install=False):
             sources.mkdir()
             for name in ("src", "companion", "tools", "tests", "assets", "LICENCES"):
                 shutil.copytree(ROOT / name, sources / name, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
-            for name in ("CMakeLists.txt", "README.md", "README.fr.md", "LICENSE", "THIRD_PARTY.md"):
+            for name in ("CMakeLists.txt", "README.md", "README.fr.md", "VERSION.md", "VERSION.fr.md", "LICENSE", "THIRD_PARTY.md"):
                 shutil.copy2(ROOT / name, sources / name)
             # Documentation authoring inputs belong only to the dedicated source
             # tree; never copy private work records into a distributable manual.
