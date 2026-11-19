@@ -4,16 +4,18 @@ title: History, storage and provider data
 description: Know what is stored locally and which data reaches the selected provider.
 section: Guides
 order: 15
-revision: 3
+revision: 5
 parent: permissions
 ---
 
 ## Overview {#overview}
 
+In version 0.10.0, the overlay and SDK retain full in-memory history; polling exposes the latest 32 messages. Optional private checkpoints can restore a session and its transcript. API context projection is separately configurable and preserves full stored history and complete tool exchanges. Native agents retain native context. See [retention and options](doc:sdk#options).
+
 | Data | Lifetime / location |
 | --- | --- |
-| Conversation | Up to 32 messages in RAM per ReShade runtime. Lost when runtime/game closes. |
-| Provider context | Up to 16 prior messages / 24,000 characters, plus relevant request and shader/tool data. |
+| Conversation | Full in-memory conversation per runtime; optional private SDK checkpoints. Polling returns the latest 32 messages. |
+| Provider context | SDK conversation history, optionally projected by the API context window. Provider switches seed up to 16 prior messages / 24,000 characters. |
 | Settings | Provider, endpoint, model, language and permissions in ReShade.ini. |
 | API key | Memory for the session; enter again after restart. |
 | Catalog | CyRSAssistant/library: metadata and requested descriptions. |

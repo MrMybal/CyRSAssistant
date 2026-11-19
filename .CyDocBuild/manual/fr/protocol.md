@@ -4,7 +4,7 @@ title: API du pont local
 description: Appelez le pont local avec les jetons du runtime et les données documentées.
 section: Guides
 order: 100
-sourceRevision: 3
+sourceRevision: 4
 kind: api
 parent: mcp
 ---
@@ -66,7 +66,7 @@ Références : [exemples ReShade](https://github.com/crosire/reshade/blob/main/e
 
 ## Conversation {#conversation}
 
-`get_state.conversation` contient jusqu’à 32 objets `{role, content, mode}` par runtime en RAM. Le fournisseur reçoit au plus 16 messages précédents / 24 000 caractères. `prompt_id` rejette les réponses périmées. Annuler ne restaure pas les modifications appliquées.
+Le tchat conserve tous les messages `{role, content, mode}` en RAM ; le suivi d’état ne renvoie que les 32 derniers et conversation_count. Le changement de fournisseur transmet jusqu’à 16 messages / 24 000 caractères ; les sessions SDK gardent leur historique complet, avec projection API facultative. prompt_id refuse les réponses obsolètes. Annuler ne restaure pas les modifications précédentes.
 
 `send_chat(runtime, session, text)` valide comme Envoyer : fournisseur connecté, aucune demande en cours, de 1 à 4095 octets UTF-8 hors espaces seuls. Retour : `prompt_id`. Aucun effet/shader sélectionné n’est requis. Le panneau utilise le mode 3 ; les anciens modes 0/1/2 restent interprétés.
 
@@ -92,7 +92,7 @@ Ces méthodes servent au compagnon local et aux contrôles de connexion. Elles n
 
 | Méthode | Champs | Résultat ou comportement |
 | --- | --- | --- |
-| connect_provider | provider : 0 CLI Codex, 1 CLI Claude Code, 2 API, 3 API locale ; endpoint, model et key facultatifs | Démarre la connexion locale. Déconnectez avant de changer de fournisseur. |
+| connect_provider | provider : 0 CLI Codex, 1 CLI Claude Code, 2 API compatible, 3 API locale, 4 OpenCode ACP, 5 Antigravity, 6 OpenAI Responses, 7 Anthropic Messages, 8 Ollama, 9 LM Studio ; endpoint, model et key facultatifs | Démarre la connexion locale. Déconnectez avant de changer de fournisseur. |
 | disconnect_provider | runtime | Annule le tchat en cours, incrémente l’époque de connexion et déconnecte. |
 | get_connection | runtime | Renvoie connection.epoch, wanted, language, provider, endpoint, model et la clé limitée à la session. |
 | connection_status | epoch, phase, message | Signal d’activité du compagnon ; phase vaut connecting, ready ou error. Une époque périmée est refusée. |

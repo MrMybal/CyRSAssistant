@@ -4,7 +4,7 @@ title: Limites et référence technique
 description: Consultez les API prises en charge, les limites et les budgets des outils.
 section: Guides
 order: 18
-sourceRevision: 3
+sourceRevision: 4
 parent: troubleshooting
 ---
 
@@ -12,8 +12,8 @@ parent: troubleshooting
 
 | Élément | Limite / comportement actuel |
 | --- | --- |
-| Tchat | 32 messages RAM. Historique fournisseur : 16 messages / 24 000 caractères. Saisie : 4095 octets UTF-8. |
-| Budget d’outils | Automatique / À la demande : 8 appels et une opération de rendu. Accès complet : 16 appels et 8 opérations. |
+| Tchat | Historique complet en RAM ; points de reprise SDK facultatifs. Contexte initial après changement de fournisseur : 16 messages / 24 000 caractères. Saisie : 4095 octets UTF-8. |
+| Budget d’outils | Le fournisseur SDK gère ses tours d’outils. Automatique / À la demande : une opération de rendu par message ; Accès complet : huit. Les écritures de métadonnées du catalogue sont distinctes. |
 | Modification groupée | Jusqu’à 64 changements de paramètres/techniques ; types et bornes courants vérifiés. |
 | FX générés | 16 contrôles float nommés ; corps contraint sans boucles/includes libres. |
 | Catalogue | 32 Mio par fichier ; JSON importé jusqu’à 16 Mio ; descriptions jusqu’à 20 000 caractères. |
@@ -26,7 +26,7 @@ parent: troubleshooting
 Les jetons session, runtime, génération et révision protègent contre les modifications obsolètes. Les identifiants de paramètres sont temporaires, pas portables. Recharger peut invalider identifiants et annulation. Une commande expirée peut avoir commencé : relisez d’abord l’état.
 
 ```callout
-{"type": "info", "title": "Note", "body": "Non implémentés : téléchargement web de packs, analyse automatique de captures dans Tchat, identification automatique du HUD, remplacement natif Vulkan/autres stages, historique automatique des presets, rejeu natif et réponses en streaming."}
+{"type": "info", "title": "Note", "body": "Non implémentés : téléchargement web de packs, analyse automatique de captures dans Tchat, identification automatique du HUD, remplacement natif Vulkan/autres stages, historique automatique des presets, rejeu natif."}
 ```
 
 ## À lire aussi {#related}

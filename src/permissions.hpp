@@ -32,7 +32,7 @@ struct Permissions {
     json snapshot() const { return {{"mode", mode}, {"epoch", epoch}, {"request", request}}; }
 };
 inline bool permissioned_write(const std::string &method) {
-    return method == "apply_patch" || method == "generate_effect" || method == "replace_game_shader" ||
+    return method == "scan_effects" || method == "apply_patch" || method == "generate_effect" || method == "replace_game_shader" ||
         method == "enable_game_shader" || method == "restore_game_shaders" || method == "restore_generated_effect" ||
         method == "reload_effects" || method == "undo" || method == "save_preset";
 }

@@ -4,7 +4,7 @@ title: Limits and technical reference
 description: Check supported APIs, effect limits, capture sizes and tool budgets.
 section: Guides
 order: 18
-revision: 3
+revision: 4
 parent: troubleshooting
 ---
 
@@ -12,8 +12,8 @@ parent: troubleshooting
 
 | Item | Current limit / behavior |
 | --- | --- |
-| Chat | 32 RAM messages. Provider history: 16 prior messages / 24,000 characters. Input: 4095 UTF-8 bytes. |
-| Tool budget | Automatic / Ask each time: 8 calls and one rendering operation. Full access: 16 calls and 8 rendering operations. |
+| Chat | Full in-memory history; optional SDK checkpoints. Provider-switch seed: 16 messages / 24,000 characters. Input: 4095 UTF-8 bytes. |
+| Tool budget | SDK provider owns tool rounds. Automatic / Ask each time allow one rendering operation per message; Full access allows eight. Catalogue metadata writes are separate. |
 | Patch | Up to 64 parameter/technique changes; current types and bounds are checked. |
 | Generated FX | 16 named float controls; constrained body without unrestricted loops/includes. |
 | Catalog | 32 MiB per scanned file; JSON import up to 16 MiB; descriptions up to 20,000 characters. |
@@ -26,7 +26,7 @@ parent: troubleshooting
 Session, runtime, generation and revision tokens protect against stale edits. Parameter IDs are transient indexes, not portable identities. Reload can invalidate IDs and undo. A timed-out command may already have started: read current state first.
 
 ```callout
-{"type": "info", "title": "Note", "body": "Not implemented: shader-pack web downloading, automatic screenshot analysis in integrated chat, automatic HUD identification, Vulkan/other-stage native replacement, historical preset backups, native-replacement replay and response streaming."}
+{"type": "info", "title": "Note", "body": "Not implemented: shader-pack web downloading, automatic screenshot analysis in integrated chat, automatic HUD identification, Vulkan/other-stage native replacement, historical preset backups, native-replacement replay."}
 ```
 
 ## Related topics {#related}

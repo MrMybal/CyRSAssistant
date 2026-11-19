@@ -4,6 +4,7 @@
 // Credentials are session-only. Never serialize this object into the public inventory.
 struct Connection {
     int provider = 0;
+    json models = json::array();
     std::array<char, 1024> endpoint{};
     std::array<char, 160> model{};
     std::array<char, 512> key{};

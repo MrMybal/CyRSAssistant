@@ -113,6 +113,7 @@ void Bridge::run() {
                     } else {
                         auto request = std::make_shared<Request>();
                         request->body = body;
+                        request->body["_external"] = true;
                         request->deadline = std::chrono::steady_clock::now() + std::chrono::seconds(5);
                         auto result = request->result.get_future();
                         {
@@ -129,7 +130,7 @@ void Bridge::run() {
                         response["request_id"] = id;
                         // Polling state must not retain hundreds of full inventories in the game.
                         const auto method = body.at("method").get<std::string>();
-                        if (method != "get_help_state" && method != "get_state" && method != "list_sessions" && method != "capture_frame" && method != "get_connection" && method != "connection_status" && method != "connect_provider" && method != "list_game_shaders" && method != "inspect_game_shader") {
+                        if (method != "assistant_delta" && method != "assistant_reply" && method != "sdk_models" && method != "restore_chat_history" && method != "get_help_state" && method != "get_state" && method != "list_sessions" && method != "capture_frame" && method != "get_connection" && method != "connection_status" && method != "connect_provider" && method != "list_game_shaders" && method != "inspect_game_shader") {
                             cache_bytes += body.dump().size() + response.dump().size();
                             cache[id] = {body, response};
                             order.push_back(id);

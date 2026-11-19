@@ -4,11 +4,13 @@ title: Permissions and approvals
 description: Choose automatic actions, individual approvals or multiple rendering operations.
 section: Guides
 order: 5
-revision: 3
+revision: 4
 parent: chat
 ---
 
 ## Overview {#overview}
+
+The native SDK CLI and MCP additionally require `--allow-write` for writes. This does not bypass Ask mode. Noninteractive CLI calls fail rather than approve themselves; supervised callers can use `--wait-for-approval`. The model cannot change the permission mode or resolve its own approval.
 
 | Mode | Behavior |
 | --- | --- |

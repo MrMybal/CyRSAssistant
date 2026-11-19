@@ -1,0 +1,22 @@
+{
+  "compact_discovery": true,
+  "discovery_threshold": 32,
+  "large_results": true,
+  "inline_bytes": 65536,
+  "result_ttl_ms": 300000,
+  "memory_quota_bytes": 67108864,
+  "disk_spooling": false,
+  "disk_quota_bytes": 268435456,
+  "spool_directory": "sdk-results",
+  "cache_ttl_ms": 30000,
+  "notifications": false,
+  "remote_notifications": false,
+  "metrics": false,
+  "metrics_file": "sdk-metrics.jsonl",
+  "context_bytes": 0,
+  "context_recent_turns": 8,
+  "persist_history": false,
+  "restore_history": false,
+  "history_directory": "history",
+  "remote_tools": []
+}

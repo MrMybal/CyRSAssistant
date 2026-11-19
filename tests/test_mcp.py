@@ -14,13 +14,20 @@ class MCPTests(unittest.TestCase):
             {"jsonrpc": "2.0", "id": 2, "method": "tools/list"},
             {"jsonrpc": "2.0", "id": 3, "method": "tools/call", "params": {"name": "cyrs_apply_patch", "arguments": {}}},
         ]
-        result = subprocess.run([sys.executable, "-m", "companion.mcp"], input="\n".join(json.dumps(m) for m in messages) + "\n", capture_output=True, text=True, timeout=5)
-        self.assertEqual(result.returncode, 0, result.stderr)
-        responses = [json.loads(line) for line in result.stdout.splitlines()]
-        self.assertEqual(len(responses), 3)
-        self.assertEqual(responses[0]["result"]["protocolVersion"], "2025-06-18")
-        self.assertEqual({t["name"] for t in responses[1]["result"]["tools"]}, {"cyrs_list_sessions", "cyrs_get_state", "cyrs_capture_frame", "cyrs_list_game_shaders", "cyrs_inspect_game_shader"})
-        self.assertIn("error", responses[2])
+        process = subprocess.Popen([sys.executable, "-m", "companion.mcp"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding="utf-8")
+        try:
+            responses = []
+            for message in messages:
+                process.stdin.write(json.dumps(message)+"\n"); process.stdin.flush()
+                if "id" in message: responses.append(json.loads(process.stdout.readline()))
+            self.assertEqual(responses[0]["result"]["protocolVersion"], "2025-06-18")
+            available = {t["name"] for t in responses[1]["result"]["tools"]}
+            self.assertTrue({"cyrs_get_state", "cyrs_get_parameters", "cyrs_get_effects"}.issubset(available))
+            self.assertTrue(responses[2]["result"]["isError"])
+            self.assertIn("AccessDenied", responses[2]["result"]["content"][0]["text"])
+        finally:
+            process.stdin.close(); process.wait(timeout=10)
+            process.stdout.close(); process.stderr.close()
 
     def test_write_tool_preserves_stale_version_for_native_validation(self):
         server = Server("\\\\.\\pipe\\CyRSAssistant-123", allow_write=True)

@@ -4,7 +4,7 @@ title: Local bridge API
 description: Call the local bridge with current runtime tokens and documented payloads.
 section: Guides
 order: 100
-revision: 3
+revision: 4
 kind: api
 parent: mcp
 ---
@@ -66,7 +66,7 @@ References: [ReShade examples](https://github.com/crosire/reshade/blob/main/exam
 
 ## Conversation {#conversation}
 
-`get_state.conversation` holds at most 32 `{role, content, mode}` objects per runtime in RAM. Provider context is bounded to 16 prior messages / 24,000 characters. `prompt_id` rejects stale responses. Cancelling does not restore previous edits.
+The overlay holds all `{role, content, mode}` messages per runtime in RAM. `get_state.conversation` returns only the latest 32; conversation_count gives the full count. Provider switches seed 16 prior messages / 24,000 characters; SDK sessions retain their full history with optional API context projection. `prompt_id` rejects stale responses. Cancelling does not restore previous edits.
 
 `send_chat(runtime, session, text)` uses the Send button's validation: connected provider, no pending request and 1–4095 UTF-8 bytes, not whitespace alone. It returns `prompt_id`. No effect or shader selection is required. Overlay messages use mode 3; legacy modes 0/1/2 remain interpreted by the companion.
 
@@ -92,7 +92,7 @@ These methods serve the local companion and connection controls. They are not mo
 
 | Method | Fields | Result or behavior |
 | --- | --- | --- |
-| connect_provider | provider: 0 Codex CLI, 1 Claude Code CLI, 2 API, 3 local API; optional endpoint, model, key | Starts the local connection. Disconnect before changing providers. |
+| connect_provider | provider: 0 Codex CLI, 1 Claude Code CLI, 2 compatible API, 3 local API, 4 OpenCode ACP, 5 Antigravity, 6 OpenAI Responses, 7 Anthropic Messages, 8 Ollama, 9 LM Studio; optional endpoint, model, key | Starts the local connection. Disconnect before changing providers. |
 | disconnect_provider | runtime | Cancels pending chat, increments the connection epoch and disconnects. |
 | get_connection | runtime | Returns connection.epoch, wanted, language, provider, endpoint, model and the session-only key. |
 | connection_status | epoch, phase, message | Companion heartbeat; phase is connecting, ready or error. An obsolete epoch is rejected. |

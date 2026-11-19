@@ -4,7 +4,7 @@ title: Troubleshooting
 description: Resolve connection, compilation, missing controls and documentation problems.
 section: Guides
 order: 16
-revision: 3
+revision: 4
 parent: update
 ---
 
@@ -15,7 +15,7 @@ parent: update
 | Add-on missing | Confirm Windows x64, full add-on support, actual rendering executable folder, and ReShade Add-ons / Log. |
 | Send disabled | Connect a provider, enter nonblank text, wait for the current request or cancel it. |
 | CLI ready, no model reply | First message checks model access. Verify login, model, quota and provider availability outside the game. |
-| API connection fails | Check full /chat/completions URL, model, JSON support, key and server. Remote HTTP is refused. |
+| API connection fails | Check the selected adapter, API base URL (or legacy full Chat Completions URL), model, key and server. Remote HTTP is refused. |
 | Local service unreachable | Disconnect/reconnect. Confirm CyRSAssistantCompanion.exe is next to the add-on. Missing heartbeat is reported after ten seconds. |
 | No editable values | Reload effects; inspect compilation errors and performance mode. Chat still works. |
 | Ambiguous FX source | Resolve duplicate filenames in overlapping search roots, or identify a unique loaded FX. |

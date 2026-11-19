@@ -15,6 +15,7 @@ from .transport import Client
 from .__main__ import plan_request, scan_state
 from .generation import generate_effect, replace_shader
 from .chat import respond
+from . import sdk
 from .permissions import with_permissions
 
 
@@ -110,7 +111,7 @@ def answer(client, runtime, provider, state):
     try:
         mode = state["prompt"].get("mode", 0)
         if mode == 3:
-            message = respond(client, runtime, provider, state)
+            message = provider.chat(client, runtime, state) if isinstance(provider, sdk.SdkProvider) else respond(client, runtime, provider, state)
         elif mode == 1:
             message = generate_effect(client, runtime, provider, state)
         elif mode == 2:
@@ -126,51 +127,70 @@ def answer(client, runtime, provider, state):
         message = _("Request failed: {error}", error=_(str(exc)))
         status = _("The last request failed. You can send another message or try again.")
         phase = "ready"
-    client.call("assistant_reply", runtime=runtime, session=state["session"], prompt_id=prompt_id, message=message.encode("utf-8")[:16000].decode("utf-8", errors="ignore"))
+    client.call("assistant_reply", runtime=runtime, session=state["session"], prompt_id=prompt_id, message=message.encode("utf-8")[:(500000 if isinstance(provider, sdk.SdkProvider) else 16000)].decode("utf-8", errors="ignore"))
     return phase, status
+
+
+def retire_provider(entry):
+    if not entry: return
+    provider=entry.get("provider")
+    if provider and hasattr(provider,"close"): provider.close()
+    future=entry.get("connect")
+    if future:
+        def finished(value):
+            try:
+                provider,_message=value.result()
+                if hasattr(provider,"close"): provider.close()
+            except Exception: pass
+        future.add_done_callback(finished)
 
 
 def serve(pipe):
     client = Client(pipe)
     states = {}
     with ThreadPoolExecutor(max_workers=4) as pool:
-        failures = 0
-        while failures < 6:
-            try:
-                sessions = client.call("list_sessions")["runtimes"]
-                for item in sessions:
-                    runtime = item["runtime"]
-                    config = client.call("get_connection", runtime=runtime)["connection"]
-                    if not config["wanted"]:
-                        states.pop(runtime, None)
-                        continue
-                    entry = states.get(runtime)
-                    if not entry or entry["epoch"] != config["epoch"]:
-                        entry = states[runtime] = {"epoch": config["epoch"], "phase": "connecting", "message": _("Checking the provider..."), "connect": pool.submit(connect, config)}
-                    future = entry.get("connect")
-                    if future and future.done():
-                        entry.pop("connect")
-                        try:
-                            entry["provider"], entry["message"] = future.result()
-                            entry["phase"] = "ready"
-                        except Exception as exc:
-                            entry["phase"], entry["message"] = "error", exc.args[0] if exc.args and isinstance(exc.args[0], str) else str(exc)
-                    pending = entry.get("request")
-                    if pending and pending.done():
-                        entry.pop("request")
-                        try:
-                            entry["phase"], entry["message"] = pending.result()
-                        except Exception:
-                            entry["message"] = _("Request cancelled or session changed.")
-                    client.call("connection_status", runtime=runtime, epoch=entry["epoch"], phase=entry["phase"], message=render_message(entry["message"], config.get("language", "en"))[:2048])
-                    if entry["phase"] == "ready" and not entry.get("request"):
-                        state = client.state(runtime)
-                        if state["prompt"]["pending"]:
-                            entry["request"] = pool.submit(answer, client, runtime, entry["provider"], state)
-                failures = 0
-            except (OSError, RuntimeError, ValueError):
-                failures += 1
-            time.sleep(0.7)
+        try:
+            failures = 0
+            while failures < 6:
+                try:
+                    sessions = client.call("list_sessions")["runtimes"]
+                    for item in sessions:
+                        runtime = item["runtime"]
+                        config = client.call("get_connection", runtime=runtime)["connection"]
+                        if not config["wanted"]:
+                            old = states.pop(runtime, None)
+                            retire_provider(old)
+                            continue
+                        entry = states.get(runtime)
+                        if not entry or entry["epoch"] != config["epoch"]:
+                            retire_provider(entry)
+                            entry = states[runtime] = {"epoch": config["epoch"], "phase": "connecting", "message": _("Checking the provider..."), "connect": pool.submit(sdk.connect, config, client, runtime)}
+                        future = entry.get("connect")
+                        if future and future.done():
+                            entry.pop("connect")
+                            try:
+                                entry["provider"], entry["message"] = future.result()
+                                entry["phase"] = "ready"
+                            except Exception as exc:
+                                entry["phase"], entry["message"] = "error", exc.args[0] if exc.args and isinstance(exc.args[0], str) else str(exc)
+                        pending = entry.get("request")
+                        if pending and pending.done():
+                            entry.pop("request")
+                            try:
+                                entry["phase"], entry["message"] = pending.result()
+                            except Exception:
+                                entry["message"] = _("Request cancelled or session changed.")
+                        client.call("connection_status", runtime=runtime, epoch=entry["epoch"], phase=entry["phase"], message=render_message(entry["message"], config.get("language", "en"))[:2048])
+                        if entry["phase"] == "ready" and not entry.get("request"):
+                            state = client.state(runtime)
+                            if state["prompt"]["pending"]:
+                                entry["request"] = pool.submit(answer, client, runtime, entry["provider"], state)
+                    failures = 0
+                except (OSError, RuntimeError, ValueError):
+                    failures += 1
+                time.sleep(0.7)
+        finally:
+            for entry in states.values(): retire_provider(entry)
 
 
 def main():

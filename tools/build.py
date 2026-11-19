@@ -5,6 +5,8 @@ import shutil
 import subprocess
 
 root = Path(__file__).resolve().parents[1]
+from bootstrap_sdk import prepare as prepare_sdk
+prepare_sdk()
 from bootstrap_dxc import prepare
 prepare()
 cmake = shutil.which("cmake")

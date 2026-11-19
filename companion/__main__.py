@@ -67,7 +67,10 @@ def watch(client, runtime):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="CyRSAssistant local companion")
+    if len(sys.argv)>1 and sys.argv[1]=='sdk':
+        from .sdk import cli
+        raise SystemExit(cli(sys.argv[2:]))
+    parser = argparse.ArgumentParser(description="CyRSAssistant local companion (sdk --help for shared SDK operations)")
     parser.add_argument("--pipe", help="Local pipe shown in the ReShade panel")
     parser.add_argument("--runtime", type=int, help="Required when several runtimes are present")
     commands = parser.add_subparsers(dest="command", required=True)

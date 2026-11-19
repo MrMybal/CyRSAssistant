@@ -4,12 +4,14 @@ title: External MCP clients
 description: Connect an external MCP client with read-only tools or explicit write access.
 section: External clients
 order: 14
-revision: 3
+revision: 5
 ---
 
 ## Overview {#overview}
 
-An external MCP client can start the developer package’s stdio server, including OpenCode or Antigravity when they support a local MCP command. These are not additional provider choices in the overlay.
+In version 0.10.0, run `CyRSAssistantCLI.exe mcp` from the installation directory, with `--allow-write` only for a trusted client. `python -m companion.mcp` forwards to the SDK server. Writes also obey the overlay permission mode; Ask mode requires the real approval buttons. See [connection, tools and retained results](doc:sdk).
+
+An external MCP client can start the developer package’s stdio server, including OpenCode or Antigravity when they support a local MCP command. OpenCode and Antigravity are also provider choices in version 0.10.0.
 
 ```bash
 python -m companion.mcp
@@ -36,7 +38,7 @@ This is a generic example: each client has its own configuration format and work
 | List runtimes; read names, parameters and values; capture a frame; list/inspect native shaders. | Generate/replace FX; compile/toggle native replacements; restore; apply/undo patches; save presets; reload. |
 
 ```callout
-{"type": "info", "title": "Note", "body": "External MCP conversation is not copied into overlay history. MCP writing is separate from integrated permission modes. Writes still require current version tokens and valid payloads; connection does not grant arbitrary native methods or filesystem access."}
+{"type": "info", "title": "Note", "body": "External MCP conversation is not copied into overlay history. MCP writing additionally requires --allow-write and obeys the application permission mode. Writes still require current version tokens and valid payloads; connection does not grant arbitrary native methods or filesystem access."}
 ```
 
 ## Related topics {#related}

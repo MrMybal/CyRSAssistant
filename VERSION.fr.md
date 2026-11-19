@@ -2,11 +2,23 @@
 
 [Retour au README](README.fr.md) · [English](VERSION.md)
 
-**Application : 0.9.0 · Statut : PROTOTYPE**<br>
-**Paquet disponible : Windows x64 · publié le 6 novembre 2026**<br>
+**Application : 0.10.0 · Statut : PROTOTYPE**<br>
+**Paquet publié : 0.10.0 · Windows x64**<br>
 **Cible : ReShade 6.8 / API 20 avec prise en charge complète des add-ons**
 
 Cette préversion est destinée aux essais et aux retours. La qualité du rendu et la compatibilité dépendent du jeu et des shaders sélectionnés. Sa publication ne constitue pas une prise en charge stable de tous les jeux.
+
+## Changements en 0.10.0 — intégration CyMCPSDK
+
+- CyMCPSDK 0.7.0, révision `791d4d7d7680213b282ec8529d248a10f8494d77`, compilé depuis ses sources natives épinglées.
+- Registre commun au tchat intégré, à la console et à MCP, avec validation native, annulation et sauvegarde explicite des presets.
+- Conversations progressives, annulation, découverte des fournisseurs/modèles, pièces jointes explicites et checkpoints privés facultatifs.
+- Réglages distincts pour la découverte compacte, les résultats conservés/paginés, le stockage disque, le TTL et les notifications, les mesures sans contenu et la fenêtre de contexte API.
+- Commandes et options Python préservées. Seuls les outils distants explicitement configurés en lecture seule sont délégués.
+
+[Téléchargements et notes 0.10.0](https://github.com/MrMybal/CyRSAssistant/releases/tag/v0.10.0) · [Empreinte du ZIP d’installation](https://github.com/MrMybal/CyRSAssistant/releases/download/v0.10.0/CyRSAssistant-0.10.0-windows-x64.zip.sha256) · [Empreinte du ZIP développeur](https://github.com/MrMybal/CyRSAssistant/releases/download/v0.10.0/CyRSAssistant-0.10.0.zip.sha256)
+
+Le paquet inclut CyRSAssistantCLI.exe et le manuel complet de 27 pages par langue. Conservez vos réglages/historiques SDK privés et mettez tous les binaires à jour ensemble.
 
 ## Changements de la version 0.9.0
 
@@ -26,17 +38,17 @@ Fermez le jeu. Conservez une copie de l’ancien add-on, du compagnon, du runtim
 
 ## Problèmes connus
 
-Les notes publiées de la version 0.9.0 ne fournissent pas de liste détaillée de bugs confirmés. Consultez le [suivi des problèmes](https://github.com/MrMybal/CyRSAssistant/issues) pour les signalements ou [signalez un problème](https://github.com/MrMybal/CyRSAssistant/issues/new). Les limites ci-dessous décrivent le périmètre du produit ; elles ne garantissent pas l’absence de bugs.
+Cette préversion ne possède pas de liste détaillée de bugs confirmés. Consultez le [suivi des problèmes](https://github.com/MrMybal/CyRSAssistant/issues) pour les signalements ou [signalez un problème](https://github.com/MrMybal/CyRSAssistant/issues/new). Les limites ci-dessous décrivent le périmètre du produit ; elles ne garantissent pas l’absence de bugs.
 
-## Limites documentées
+## Limites actuelles
 
 - **Plateformes et shaders natifs** : le paquet fourni cible Windows x64. Le remplacement natif prend en charge les pixel shaders DX11/DX12 capturés ; les autres stages et Vulkan ne sont pas pris en charge. Les noms et le HLSL d’origine du jeu sont généralement indisponibles ; les shaders natifs sont identifiés par empreinte. Un shader partagé peut affecter plusieurs objets et l’assistant peut refuser une reconstruction incertaine.
 - **Remplacement DX12** : chaque état de pipeline concerné est reconstruit avec ses autres stages, son état de rendu et sa root signature. Tous les pipelines actuels doivent réussir avant activation. Un futur pipeline incompatible désactive le remplacement et signale une erreur. Les listes de commandes déjà enregistrées peuvent encore référencer une ancienne version du shader.
 - **FX générés** : la génération produit des effets autonomes contraints avec jusqu’à 16 contrôles nommés, sans boucles ni dépendances externes. La compilation ne garantit pas le résultat visuel demandé.
 - **Modification et restauration** : l’ordre des techniques n’est pas modifié. L’annulation conserve une seule modification en mémoire et peut être invalidée par un changement d’inventaire ou un rechargement. Les remplacements de shaders ne sont pas réactivés automatiquement au redémarrage du jeu. L’enregistrement écrit le preset actif ; les sauvegardes historiques automatiques ne sont pas implémentées.
 - **Automatismes indisponibles** : le téléchargement de packs de shaders, l’analyse automatique des captures et l’identification automatique du HUD ne sont pas implémentés.
-- **Fournisseurs et tchat** : OpenCode et Antigravity peuvent utiliser des clients MCP externes, mais ne disposent pas de connecteur direct dans le panneau. Une session CLI reconnue ne garantit pas l’accès au modèle. Les réponses apparaissent une fois terminées, sans diffusion progressive. Les modes Automatique et À la demande autorisent une opération de rendu par message ; Accès complet permet plusieurs opérations dans les limites des outils.
-- **Historique et données** : le runtime conserve jusqu’à 32 messages en RAM. Jusqu’à 16 messages précédents, limités à 24 000 caractères, accompagnent les demandes avec les données pertinentes des shaders et outils. Changer de fournisseur conserve ce contexte récent. Fermer le jeu efface le tchat local sans supprimer les données conservées par le fournisseur. Les clés API restent en mémoire pour la session. Voir [l’historique et les données transmises](https://mrmybal.github.io/CyRSAssistant/Documentation.html#/fr/history-privacy).
+- **Fournisseurs et tchat** : les agents natifs nécessitent un CLI compatible installé et un compte. Une session SDK initialisée ne prouve ni l’accès au modèle ni le quota. La réponse est progressive lorsque le fournisseur le permet. Automatique et À la demande autorisent une opération de rendu par message ; Accès complet en autorise huit. Les outils MCP externes sont délégués uniquement sur autorisation explicite et lorsqu’ils sont annoncés en lecture seule. Les comptes des agents natifs et chaque combinaison fournisseur/modèle restent à valider sur leur cible.
+- **Historique et données** : le panneau conserve toute la conversation en mémoire ; le suivi d’état renvoie les 32 derniers messages. Un changement de fournisseur transmet jusqu’à 16 messages / 24 000 caractères. Les checkpoints SDK privés facultatifs conservent les sessions entre redémarrages ; la projection API facultative ne supprime pas l’historique stocké. Sans conservation, fermer le jeu efface le tchat local. La conservation par le fournisseur est distincte. Les clés API restent en mémoire pour la session.
 
 ## Références
 

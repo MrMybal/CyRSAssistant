@@ -20,7 +20,7 @@
 #include <filesystem>
 
 extern "C" __declspec(dllexport) const char *NAME = "CyRSAssistant";
-extern "C" __declspec(dllexport) const char *DESCRIPTION = "CyRSAssistant 0.9.0 - Cyberalien - Live shader assistant.";
+extern "C" __declspec(dllexport) const char *DESCRIPTION = "CyRSAssistant 0.10.0 - Cyberalien - Live shader assistant.";
 
 namespace {
 using namespace cyrs;
@@ -31,13 +31,14 @@ struct Technique { effect_technique handle; json metadata; };
 struct Runtime {
     Branding branding;
     manual::State manual;
-    uint64_t id = 0, generation = 0, revision = 0, prompt_id = 0, scan_id = 0;
+    uint64_t id = 0, generation = 0, revision = 0, prompt_id = 0, scan_id = 0, conversation_id = 0;
     std::vector<Parameter> parameters;
     std::vector<Technique> techniques;
     json undo = json::array(), applied = json::array();
     std::string preset, prompt, answer, status = "Ready", filter;
     std::string language = "en";
     std::array<char, 4096> input{};
+    std::array<char, 1024> attachment{};
     std::array<char, 256> search{};
     bool pending = false, loading = false;
     json conversation = json::array();
@@ -62,11 +63,11 @@ Bridge bridge;
 
 void chat_message(Runtime &state, const char *role, const std::string &text) {
     state.conversation.push_back({{"role", role}, {"content", text}, {"mode", state.prompt_mode}});
-    while (state.conversation.size() > 32) state.conversation.erase(state.conversation.begin());
     state.chat_scroll = true;
 }
 
 void cancel_prompt(Runtime &state) {
+    if (state.pending && !state.answer.empty()) chat_message(state, "assistant", state.answer);
     if (state.pending) chat_message(state, "system", i18n::translate(state.language, "Request cancelled. Changes already applied remain active; use the restore controls if needed."));
     state.pending = false;
     state.permissions.invalidate();
@@ -213,11 +214,14 @@ json snapshot(effect_runtime *runtime, Runtime &state) {
     json result = {{"session", session}, {"runtime", state.id}, {"generation", state.generation}, {"revision", state.revision},
         {"parameters", json::array()}, {"techniques", json::array()}, {"preset", state.preset},
         {"pipe", bridge.name()}, {"scan_id", state.scan_id}, {"loading", state.loading}, {"undo_available", !state.undo.empty() && !state.applied.empty()},
-        {"prompt", {{"id", state.prompt_id}, {"text", state.prompt}, {"pending", state.pending}, {"mode", state.prompt_mode}, {"shader_hash", state.selected_hash}, {"progress", state.progress}}},
+        {"prompt", {{"id", state.prompt_id}, {"text", state.prompt}, {"pending", state.pending}, {"mode", state.prompt_mode}, {"shader_hash", state.selected_hash}, {"progress", state.progress}, {"partial", state.answer}, {"attachment", state.attachment.data()}}},
         {"generated", {{"file", state.generated_file}, {"phase", state.generated_phase}, {"message", state.generated_message}, {"replaces", state.generated_replaces}}}};
     const auto &c = state.connection;
     result["language"] = state.language;
-    result["conversation"] = state.conversation;
+    result["conversation"] = json::array();
+    for (size_t i = state.conversation.size() > 32 ? state.conversation.size()-32 : 0; i < state.conversation.size(); ++i) result["conversation"].push_back(state.conversation[i]);
+    result["conversation_count"] = state.conversation.size();
+    result["conversation_id"] = state.conversation_id;
     result["permissions"] = state.permissions.snapshot();
     result["connection"] = {{"provider", c.provider}, {"phase", c.phase}, {"ready", connected(c)}, {"message", c.message}, {"wanted", c.wanted}};
     for (const auto &p : state.parameters) result["parameters"].push_back(p.metadata);
@@ -331,7 +335,7 @@ json execute(effect_runtime *runtime, Runtime &state, const json &request) {
         return {{"ok", true}, {"session", session}, {"runtimes", sessions}};
     }
     require(request.contains("runtime") && request.at("runtime") == state.id, "Explicit runtime required");
-    if (request.contains("prompt_id"))
+    if (request.contains("prompt_id") && request.at("prompt_id") != 0)
         require(state.pending && request.at("prompt_id") == state.prompt_id, "Prompt cancelled or superseded");
     if (method == "get_help_state") {
         return {{"ok", true}, {"help", {{"open", state.manual.launched}, {"reader", "CyDoc"},
@@ -368,10 +372,16 @@ json execute(effect_runtime *runtime, Runtime &state, const json &request) {
         reshade::set_config_value(runtime, "CYRSASSISTANT", "PermissionMode", mode);
         return {{"ok", true}};
     }
+    if (method == "request_external_permission") {
+        require(request.at("session") == session && !state.pending, "An assistant request is active or the session changed");
+        const auto action = request.at("action").get<std::string>();
+        require(permissioned_write(action) || action == "scan_effects" || action == "catalog_scan" || action == "catalog_import" || action == "store_effect_description" || action == "read_effect_source" || action == "inspect_game_shader", "Unknown permission action");
+        return {{"ok", true}, {"permission", state.permissions.issue(0, action, request.at("payload"), request.at("summary"))}};
+    }
     if (method == "request_action_permission") {
         require(request.at("session") == session && state.pending && request.at("prompt_id") == state.prompt_id, "Prompt changed");
         const auto action = request.at("action").get<std::string>();
-        require(permissioned_write(action) || action == "read_effect_source" || action == "inspect_game_shader", "Unknown permission action");
+        require(permissioned_write(action) || action == "catalog_scan" || action == "catalog_import" || action == "store_effect_description" || action == "read_effect_source" || action == "inspect_game_shader", "Unknown permission action");
         return {{"ok", true}, {"permission", state.permissions.issue(state.prompt_id, action, request.at("payload"), request.at("summary"))}};
     }
     if (method == "resolve_action_permission") {
@@ -379,22 +389,39 @@ json execute(effect_runtime *runtime, Runtime &state, const json &request) {
         state.permissions.decide(request.at("permission_id").get<uint64_t>(), request.at("allow").get<bool>());
         return {{"ok", true}};
     }
+    if (method == "consume_application_permission") {
+        const auto action=request.at("action").get<std::string>();
+        require(action == "catalog_scan" || action == "catalog_import" || action == "store_effect_description", "Unknown catalogue action");
+        require(request.at("session") == session && (request.at("prompt_id") == 0 || (state.pending && request.at("prompt_id") == state.prompt_id)), "Prompt changed");
+        state.permissions.consume(request.at("permission_id").get<uint64_t>(),request.at("prompt_id").get<uint64_t>(),action,request.at("payload"));
+        return {{"ok",true}};
+    }
     if (method == "consume_read_permission") {
-        require(request.at("session") == session && state.pending && request.at("prompt_id") == state.prompt_id, "Prompt changed");
+        require(request.at("session") == session && (request.at("prompt_id") == 0 || (state.pending && request.at("prompt_id") == state.prompt_id)), "Prompt changed");
         const auto action = request.at("action").get<std::string>();
         require(action == "read_effect_source" || action == "inspect_game_shader", "Expected source inspection permission");
-        state.permissions.consume(request.at("permission_id").get<uint64_t>(), state.prompt_id, action, request.at("payload"));
+        state.permissions.consume(request.at("permission_id").get<uint64_t>(), request.at("prompt_id").get<uint64_t>(), action, request.at("payload"));
         return {{"ok", true}};
     }
-    if (request.contains("prompt_id") && permissioned_write(method) && (state.permissions.mode == 1 || request.contains("permission_id"))) {
+    if ((request.contains("prompt_id") || request.value("_external", false)) && permissioned_write(method) && (state.permissions.mode == 1 || request.contains("permission_id"))) {
         auto payload = request;
-        for (const auto *key : {"protocol", "request_id", "method", "permission_id"}) payload.erase(key);
-        state.permissions.consume(request.value("permission_id", uint64_t(0)), state.prompt_id, method, payload);
+        for (const auto *key : {"protocol", "request_id", "method", "permission_id", "_external"}) payload.erase(key);
+        state.permissions.consume(request.value("permission_id", uint64_t(0)), request.value("prompt_id", uint64_t(0)), method, payload);
+    }
+    if (method == "cancel_chat") {
+        require(request.at("session") == session, "Session changed"); cancel_prompt(state); return {{"ok", true}};
     }
     if (method == "send_chat") {
         require(request.at("session") == session, "Session changed");
         submit_chat(state, request.at("text").get<std::string>());
         return {{"ok", true}, {"prompt_id", state.prompt_id}};
+    }
+    if (method == "assistant_delta") {
+        require(request.at("session") == session && state.pending && request.at("prompt_id") == state.prompt_id, "Prompt changed");
+        const auto text = request.at("text").get<std::string>();
+        require(text.size() <= 512 * 1024, "Stream snapshot too large");
+        state.answer = text; state.chat_scroll = true;
+        return {{"ok", true}};
     }
     if (method == "assistant_progress") {
         require(request.at("session") == session, "Session changed");
@@ -424,7 +451,7 @@ json execute(effect_runtime *runtime, Runtime &state, const json &request) {
         auto &c = state.connection;
         require(!c.wanted, "Disconnect before changing provider");
         const int provider = request.at("provider").get<int>();
-        require(provider >= 0 && provider <= 3, "Unsupported provider");
+        require(provider >= 0 && provider <= 9, "Unsupported provider");
         const auto endpoint = request.value("endpoint", std::string()), model = request.value("model", std::string()), key = request.value("key", std::string());
         require(endpoint.size() < c.endpoint.size() && model.size() < c.model.size() && key.size() < c.key.size(), "Connection field too long");
         c.provider = provider;
@@ -438,6 +465,22 @@ json execute(effect_runtime *runtime, Runtime &state, const json &request) {
         auto &c = state.connection; c.wanted = false; ++c.epoch; c.phase = "disconnected"; c.message = "Disconnected.";
         cancel_prompt(state);
         return {{"ok", true}};
+    }
+    if (method == "restore_chat_history") {
+        require(state.connection.wanted && request.at("epoch") == state.connection.epoch && !state.pending, "Connection superseded");
+        require(request.at("messages").is_array() && request.at("messages").size() <= 4, "Invalid history batch");
+        for (const auto &message : request.at("messages")) {
+            const auto role = message.at("role").get<std::string>(); const auto content = message.at("content").get<std::string>();
+            require((role == "user" || role == "assistant") && content.size() <= 500000, "Invalid restored message");
+            chat_message(state, role.c_str(), content);
+        }
+        return {{"ok", true}};
+    }
+    if (method == "sdk_models") {
+        auto &c = state.connection;
+        require(c.wanted && request.at("epoch") == c.epoch, "Connection superseded");
+        require(request.at("models").is_array() && request.at("models").size() <= 1000, "Invalid model catalogue");
+        c.models = request.at("models"); return {{"ok", true}};
     }
     if (method == "get_connection") {
         auto &c = state.connection;
@@ -518,7 +561,7 @@ json execute(effect_runtime *runtime, Runtime &state, const json &request) {
         runtime->reload_effect_next_frame(nullptr);
         return {{"ok", true}, {"status", "reload_queued"}, {"generation", state.generation}};
     }
-    if (method == "scan_effects") { scan(runtime, state); ++state.scan_id; }
+    if (method == "scan_effects") { if (request.contains("session")) check_version(runtime, state, request); scan(runtime, state); ++state.scan_id; }
     else if (method == "apply_patch") {
         if (request.contains("prompt_id")) require(state.pending && request.at("prompt_id") == state.prompt_id, "Prompt cancelled or superseded");
         apply(runtime, state, request);
@@ -529,7 +572,7 @@ json execute(effect_runtime *runtime, Runtime &state, const json &request) {
         require(request.at("session") == session, "Session changed");
         require(state.pending && request.at("prompt_id") == state.prompt_id, "Prompt cancelled or superseded");
         const auto message = request.at("message").get<std::string>();
-        require(message.size() <= 16384, "Reply too long");
+        require(message.size() <= 512 * 1024, "Reply too long");
         state.answer = message; state.pending = false; state.permissions.invalidate();
         chat_message(state, "assistant", message);
     } else throw std::runtime_error("Unknown method");
@@ -601,7 +644,7 @@ void init(effect_runtime *runtime) {
     reshade::get_config_value(runtime, "CYRSASSISTANT", "Provider", state.connection.provider);
     reshade::get_config_value(runtime, "CYRSASSISTANT", "PermissionMode", state.permissions.mode);
     state.permissions.mode = std::clamp(state.permissions.mode, 0, 2);
-    state.connection.provider = std::clamp(state.connection.provider, 0, 3);
+    state.connection.provider = std::clamp(state.connection.provider, 0, 9);
     size_t endpoint_size = state.connection.endpoint.size(), model_size = state.connection.model.size();
     reshade::get_config_value(runtime, "CYRSASSISTANT", "Endpoint", state.connection.endpoint.data(), &endpoint_size);
     reshade::get_config_value(runtime, "CYRSASSISTANT", "Model", state.connection.model.data(), &model_size);
@@ -653,7 +696,7 @@ void overlay(effect_runtime *runtime) {
             ImGui::SameLine();
         }
         ImGui::BeginGroup();
-        ImGui::Text("CyRSAssistant 0.9.0 - %s", tr("AI chat"));
+        ImGui::Text("CyRSAssistant 0.10.0 - %s", tr("AI chat"));
         auto &c = s.connection;
         const bool ready = connected(c);
         const bool lost = c.wanted && GetTickCount64() - (c.heartbeat ? c.heartbeat : c.started) >= 10000;
@@ -668,7 +711,7 @@ void overlay(effect_runtime *runtime) {
             if (ImGui::BeginTabItem(ui_label("Chat").c_str())) {
                 context_help("chat");
         ImGui::BeginDisabled(s.pending);
-        if (ImGui::SmallButton(ui_label("New conversation").c_str())) { s.conversation.clear(); s.answer.clear(); s.prompt.clear(); s.input.fill(0); }
+        if (ImGui::SmallButton(ui_label("New conversation").c_str())) { ++s.conversation_id; s.conversation.clear(); s.answer.clear(); s.prompt.clear(); s.input.fill(0); }
         ImGui::EndDisabled();
         ImGui::SameLine();
         if (ImGui::SmallButton(ui_label("Copy conversation").c_str())) {
@@ -680,11 +723,11 @@ void overlay(effect_runtime *runtime) {
         ImGui::SameLine();
         if (ImGui::SmallButton(ui_label("About chat history").c_str())) ImGui::OpenPopup("chat_privacy");
         if (ImGui::BeginPopup("chat_privacy")) {
-            ImGui::TextWrapped(tr("32 messages kept in memory. Recent exchanges are sent to the selected provider, including after switching providers. New conversation clears this local context without restoring the rendering."));
+            ImGui::TextWrapped(tr("Conversation history stays in memory. Private session persistence is optional in SDK settings. New conversation clears local context without restoring the rendering."));
             ImGui::EndPopup();
         }
         const bool approval_pending = !s.permissions.request.is_null() && s.permissions.request.value("status", "") == "pending";
-        ImGui::BeginChild("conversation", ImVec2(0, std::max(120.0f, ImGui::GetContentRegionAvail().y - (approval_pending ? 330.0f : 155.0f))), true);
+        ImGui::BeginChild("conversation", ImVec2(0, std::max(120.0f, ImGui::GetContentRegionAvail().y - (approval_pending ? 360.0f : 185.0f))), true);
         if (s.conversation.empty()) ImGui::TextWrapped(tr("Hello! Ask a question or describe the look you want. You can chat here even with no effects loaded or shader selected."));
         for (size_t i = 0; i < s.conversation.size(); ++i) {
             const auto &message = s.conversation[i];
@@ -697,6 +740,7 @@ void overlay(effect_runtime *runtime) {
             ImGui::Separator();
             ImGui::PopID();
         }
+        if (s.pending && !s.answer.empty()) ImGui::TextWrapped("%s", s.answer.c_str());
         if (s.pending) { ImGui::Text(tr("Working... %llu s"), (GetTickCount64() - s.prompt_started) / 1000); ImGui::TextWrapped("%s", tr(s.progress.c_str())); }
         if (s.chat_scroll) { ImGui::SetScrollHereY(1.0f); s.chat_scroll = false; }
         ImGui::EndChild();
@@ -716,6 +760,7 @@ void overlay(effect_runtime *runtime) {
         ImGui::TextUnformatted(tr("Your message"));
         ImGui::InputTextMultiline("##prompt", s.input.data(), s.input.size(), ImVec2(-1, 90));
         const bool shortcut = ImGui::IsItemFocused() && ImGui::GetIO().KeyCtrl && ImGui::IsKeyPressed(ImGuiKey_Enter, false);
+        ImGui::InputText(ui_label("Attach file (optional)").c_str(), s.attachment.data(), s.attachment.size());
         const bool can_send = ready && !s.pending && std::string(s.input.data()).find_first_not_of(" \t\r\n") != std::string::npos;
         ImGui::BeginDisabled(!can_send);
         if ((ImGui::Button(ui_label("Send").c_str()) || shortcut) && can_send) {
@@ -760,14 +805,21 @@ void overlay(effect_runtime *runtime) {
                 context_help("connect");
         ImGui::SeparatorText(tr("Provider connection"));
         ImGui::BeginDisabled(c.wanted);
-        const char *provider_names[] = {tr("Codex (CLI session)"), tr("Claude Code (CLI session)"), tr("OpenAI-compatible API"), tr("Local model (API)")};
-        ImGui::Combo(ui_label("Provider").c_str(), &c.provider, provider_names, 4);
+        const char *provider_names[] = {tr("Codex (CLI session)"), tr("Claude Code (CLI session)"), tr("OpenAI-compatible API"), tr("Local model (API)"), "OpenCode (ACP)", "Antigravity", "OpenAI (Responses)", "Anthropic (Messages)", "Ollama", "LM Studio"};
+        ImGui::Combo(ui_label("Provider").c_str(), &c.provider, provider_names, 10);
         ImGui::InputText(ui_label("Model (empty = CLI default)").c_str(), c.model.data(), c.model.size());
-        if (c.provider >= 2) {
-            ImGui::InputText(ui_label("URL /chat/completions").c_str(), c.endpoint.data(), c.endpoint.size());
+        if (c.provider == 2 || c.provider == 3 || c.provider >= 6) {
+            ImGui::InputText(ui_label("API URL (base or Chat Completions)").c_str(), c.endpoint.data(), c.endpoint.size());
             ImGui::InputText(ui_label("API key").c_str(), c.key.data(), c.key.size(), ImGuiInputTextFlags_Password);
             ImGui::TextDisabled(tr("The key is kept in memory for this session only."));
         } else ImGui::TextWrapped(tr("Uses your existing CLI login. Connect checks the local session; the first message checks model access."));
+        if (!c.models.empty() && ImGui::BeginCombo(ui_label("Available models").c_str(), c.model.data())) {
+            for (const auto &model : c.models) {
+                const auto id = model.is_string() ? model.get<std::string>() : model.value("id", std::string());
+                if (!id.empty() && id.size() < c.model.size() && ImGui::Selectable(id.c_str(), id == c.model.data())) strcpy_s(c.model.data(), c.model.size(), id.c_str());
+            }
+            ImGui::EndCombo();
+        }
         ImGui::EndDisabled();
         if (!c.wanted) {
             if (ImGui::Button(ui_label("Connect").c_str())) {

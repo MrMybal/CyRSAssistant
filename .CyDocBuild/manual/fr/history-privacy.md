@@ -4,16 +4,18 @@ title: Historique, stockage et données fournisseur
 description: Comprenez les données locales et celles transmises au fournisseur choisi.
 section: Guides
 order: 15
-sourceRevision: 3
+sourceRevision: 5
 parent: permissions
 ---
 
 ## Vue d’ensemble {#overview}
 
+Dans la version 0.10.0, le panneau et le SDK conservent tout l’historique en mémoire ; le suivi expose les 32 derniers messages. Des checkpoints privés facultatifs restaurent une session et son contenu. La projection du contexte API est réglable séparément et préserve l’historique intégral et les échanges d’outils complets. Les agents natifs conservent leur contexte natif. Voir [la conservation et les options](doc:sdk#options).
+
 | Donnée | Durée / emplacement |
 | --- | --- |
-| Conversation | Jusqu’à 32 messages en RAM par runtime ReShade. Perdus à la fermeture du runtime/jeu. |
-| Contexte fournisseur | Jusqu’à 16 messages précédents / 24 000 caractères, plus demande et données de shaders/outils utiles. |
+| Conversation | Conversation intégrale en mémoire ; checkpoints SDK privés facultatifs. Le suivi expose les 32 derniers messages. |
+| Contexte fournisseur | Historique SDK, projeté si une fenêtre de contexte API est configurée. Un changement de fournisseur reprend jusqu’à 16 messages précédents / 24 000 caractères. |
 | Réglages | Fournisseur, URL, modèle, langue et autorisations dans ReShade.ini. |
 | Clé API | Mémoire de la session ; à ressaisir au redémarrage. |
 | Catalogue | CyRSAssistant/library : métadonnées et descriptions demandées. |

@@ -246,6 +246,12 @@
     "The CyDoc manual is missing. Re-extract the complete CyRSAssistant/Documentation folder from the ZIP.": "Le manuel CyDoc est absent. Réextrayez le dossier CyRSAssistant/Documentation complet du ZIP.",
     "The local CyDoc manual could not be opened. Check your default browser.": "Le manuel CyDoc local n’a pas pu être ouvert. Vérifiez votre navigateur par défaut.",
     "Cannot locate the installed add-on": "Impossible de localiser l’add-on installé",
-    "The manual opens in your default browser, fully offline. It includes guides, images, diagrams and public API reference.": "Le manuel s’ouvre dans votre navigateur par défaut, entièrement hors ligne. Il contient guides, images, schémas et référence de l’API publique."
+    "The manual opens in your default browser, fully offline. It includes guides, images, diagrams and public API reference.": "Le manuel s’ouvre dans votre navigateur par défaut, entièrement hors ligne. Il contient guides, images, schémas et référence de l’API publique.",
+    "Available models": "Modèles disponibles",
+    "Attach file (optional)": "Joindre un fichier (facultatif)",
+    "Conversation history stays in memory. Private session persistence is optional in SDK settings. New conversation clears local context without restoring the rendering.": "L’historique reste en mémoire. La conservation privée des sessions est facultative dans les réglages SDK. Une nouvelle conversation efface le contexte local sans restaurer le rendu.",
+    "Calling an application tool...": "Appel d’un outil de l’application…",
+    "SDK provider connected. Model access is verified by the next message.": "Fournisseur SDK connecté. L’accès au modèle est vérifié au prochain message.",
+    "API URL (base or Chat Completions)": "URL API (base ou Chat Completions)"
   }
 }

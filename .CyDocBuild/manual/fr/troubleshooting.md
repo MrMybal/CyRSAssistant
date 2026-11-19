@@ -4,7 +4,7 @@ title: Dépannage
 description: Résolvez les problèmes de connexion, compilation, paramètres et documentation.
 section: Guides
 order: 16
-sourceRevision: 3
+sourceRevision: 4
 parent: update
 ---
 
@@ -15,7 +15,7 @@ parent: update
 | Add-on absent | Vérifiez Windows x64, le support complet des add-ons, le dossier du véritable exécutable et ReShade Add-ons / Log. |
 | Envoyer désactivé | Connectez un fournisseur, saisissez un texte non vide, attendez la demande active ou annulez-la. |
 | CLI prêt, aucune réponse du modèle | Le premier message vérifie l’accès au modèle. Vérifiez session, modèle, quota et disponibilité hors du jeu. |
-| Échec de connexion API | Vérifiez URL /chat/completions complète, modèle, JSON, clé et serveur. HTTP distant est refusé. |
+| Échec de connexion API | Vérifiez l’adaptateur choisi, la base API (ou l’ancienne URL Chat Completions complète), le modèle, la clé et le serveur. HTTP distant est refusé. |
 | Service local injoignable | Déconnectez/reconnectez. Vérifiez CyRSAssistantCompanion.exe à côté de l’add-on. L’absence de signal est rapportée après dix secondes. |
 | Aucune valeur modifiable | Rechargez, inspectez les erreurs et le mode performance. Le tchat reste utilisable. |
 | Source FX ambiguë | Corrigez les noms en doublon dans les racines qui se recouvrent, ou identifiez un FX chargé unique. |

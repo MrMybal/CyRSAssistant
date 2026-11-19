@@ -4,15 +4,17 @@ title: Chat, history and useful requests
 description: Send requests, refine a look, cancel work and manage conversation context.
 section: Guides
 order: 4
-revision: 3
+revision: 5
 parent: start
 ---
 
 ## Overview {#overview}
 
+Version 0.10.0 displays SDK text deltas as they arrive. Cancel interrupts the provider and rejects subsequent stale actions; previous edits remain active. The optional attachment field accepts an explicitly selected local file, loaded on the worker and sent only when the provider supports it. Full in-memory chat is retained; [private session persistence](doc:sdk#options) is optional.
+
 1. Connect and open Chat. Ordinary conversation needs no loaded effect or selected shader.
 2. Write in Your message. Enter adds a line; Ctrl+Enter or Send submits.
-3. Wait for progress. The response appears when finished, without streaming.
+3. Wait for progress. Text appears progressively; the final message replaces that live preview.
 4. If an approval appears, inspect values/code and choose Allow this action or Deny this action.
 5. Review the result before refining, restoring or saving.
 

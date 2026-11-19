@@ -34,7 +34,7 @@ class ManualTests(unittest.TestCase):
             self.assertEqual({h["id"] for h in en["headings"]}, {h["id"] for h in fr["headings"]}, identity)
             self.assertEqual(re.findall(r'data-cydoc-id="([^"]+)"', en["html"]), re.findall(r'data-cydoc-id="([^"]+)"', fr["html"]))
         report = json.loads((self.resources / "translation-report.json").read_text(encoding="utf-8"))
-        self.assertEqual(report["current"], 26)
+        self.assertEqual(report["current"], 27)
         for kind in ("missing", "outdated", "untracked"): self.assertFalse(report[kind])
     def test_images_diagrams_and_only_required_module(self):
         self.assertEqual([p.name for p in self.resources.glob("media-*.js")], ["media-image.js"])

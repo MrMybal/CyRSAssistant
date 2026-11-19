@@ -6,6 +6,7 @@ from pathlib import Path
 import re
 import shutil
 import tempfile
+import tarfile
 import zipfile
 
 import importlib.util
@@ -24,6 +25,9 @@ REQUIRED_LICENSES = (
     'AssistantRuntime-Notices.txt',
     'CyRSAssistant-GPL-3.0.txt',
     'CyDoc.txt',
+    'CyMCPSDK.txt',
+    'cpp-httplib.txt',
+    'PicoSHA2.txt',
     'DXC-LLVM.txt',
     'DXC-Microsoft.txt',
     'DearImGui.txt',
@@ -44,6 +48,18 @@ REQUIRED_LICENSES = (
 
 
 def validate_delivery(binary, service):
+    sdk_cli = binary.with_name('CyRSAssistantCLI.exe')
+    sdk = json.loads(sdk_cli.with_suffix('.build.json').read_text(encoding='utf-8'))
+    expected_sdk = json.loads((ROOT / 'tools/cymcpsdk.lock.json').read_text(encoding='utf-8'))
+    if sdk['application_version'] != VERSION or sdk['sdk'] != expected_sdk or sdk['sha256'] != hashlib.sha256(sdk_cli.read_bytes()).hexdigest():
+        raise ValueError('SDK executable is stale. Rebuild tools/build.py.')
+    source_archive = ROOT / expected_sdk['archive']
+    if hashlib.sha256(source_archive.read_bytes()).hexdigest() != expected_sdk['sha256']:
+        raise ValueError('Pinned SDK sources differ from the built SDK')
+    with tarfile.open(source_archive) as source:
+        for notice, member in [('CyMCPSDK.txt','LICENSE'),('cpp-httplib.txt','third_party/httplib/LICENSE'),('PicoSHA2.txt','third_party/picosha2/LICENSE')]:
+            if (ROOT/'LICENCES'/notice).read_bytes() != source.extractfile(member).read():
+                raise ValueError('SDK license differs from original: '+notice)
     manifest = json.loads(service.with_suffix(".build.json").read_text(encoding="utf-8"))
     expected = json.loads((ROOT / "tools/runtime-licenses.lock.json").read_text(encoding="utf-8"))
     if manifest["application_version"] != VERSION or manifest["sha256"] != hashlib.sha256(service.read_bytes()).hexdigest():
@@ -82,11 +98,13 @@ def installation_notes():
     return f"""CyRSAssistant {VERSION} - Windows x64
 
 ENGLISH
-Requires ReShade 6.8 with full add-on support in a 64-bit Windows game.
+Requires ReShade 6.8 with full add-on support in a 64-bit Windows game
+and the Microsoft Visual C++ 2015-2022 x64 runtime.
 
 1. Close the game. Keep a copy of any previous CyRSAssistant installation.
 2. Extract this ZIP next to the ReShade DLL, keeping its folder structure.
-   CyRSAssistant.addon64, CyRSAssistantCompanion.exe and CyRSAssistantRuntime
+   CyRSAssistant.addon64, CyRSAssistantCompanion.exe, CyRSAssistantCLI.exe
+   and CyRSAssistantRuntime
    must be together. For engines with a launcher, use the game executable's
    actual folder, not the launcher's folder.
 3. Start the game and open CyRSAssistant in the ReShade overlay.
@@ -95,7 +113,10 @@ Requires ReShade 6.8 with full add-on support in a 64-bit Windows game.
    OpenAI-compatible API or a local model. Python is bundled; no separate
    Python installation or manual service launch is required.
 5. Write in Chat and click Send, or use Ctrl+Enter.
-6. Open Help > Open documentation for the complete local CyDoc manual,
+6. Optional external tools: run CyRSAssistantCLI.exe --help. MCP uses
+   CyRSAssistantCLI.exe mcp (read-only unless --allow-write). Ask mode
+   also requires approval in the overlay.
+7. Open Help > Open documentation for the complete local CyDoc manual,
    or use a contextual Help button. It opens the matching language/page via
    file:// in your default browser. You can also open
    CyRSAssistant/Documentation/Documentation.html directly. Keep its DocData
@@ -108,11 +129,12 @@ replace your ReShade.ini.
 
 FRANÇAIS
 Nécessite ReShade 6.8 avec prise en charge complète des add-ons dans un jeu
-Windows 64 bits.
+Windows 64 bits, ainsi que le runtime Microsoft Visual C++ 2015-2022 x64.
 
 1. Fermez le jeu. Conservez une copie de votre ancienne installation.
 2. Extrayez ce ZIP à côté de la DLL ReShade, en conservant les sous-dossiers.
-   CyRSAssistant.addon64, CyRSAssistantCompanion.exe et CyRSAssistantRuntime
+   CyRSAssistant.addon64, CyRSAssistantCompanion.exe, CyRSAssistantCLI.exe
+   et CyRSAssistantRuntime
    doivent rester ensemble. Si le jeu utilise un lanceur, choisissez le
    dossier du véritable exécutable du jeu.
 3. Lancez le jeu et ouvrez CyRSAssistant dans l'overlay ReShade.
@@ -122,7 +144,10 @@ Windows 64 bits.
    configurer une API compatible OpenAI ou un modèle local. Python est intégré ;
    aucune installation séparée ni aucun lancement manuel du service n'est requis.
 6. Écrivez dans Tchat et cliquez sur Envoyer, ou utilisez Ctrl+Entrée.
-7. Ouvrez Aide > Ouvrir la documentation, ou un bouton d'aide contextuel.
+7. Outils externes facultatifs : CyRSAssistantCLI.exe --help. MCP utilise
+   CyRSAssistantCLI.exe mcp (lecture seule sans --allow-write). Le mode
+   À la demande nécessite aussi une validation dans le panneau.
+8. Ouvrez Aide > Ouvrir la documentation, ou un bouton d'aide contextuel.
    CyDoc ouvre la bonne langue/page via file:// dans le navigateur par défaut.
    Vous pouvez aussi ouvrir CyRSAssistant/Documentation/Documentation.html.
    Conservez DocData et DocAI.md avec ce fichier.
@@ -164,7 +189,7 @@ def package(install=False):
     with tempfile.TemporaryDirectory(prefix="cyrs-package-") as staging:
         destination = Path(staging) / f"CyRSAssistant-{VERSION}"
         destination.mkdir()
-        for path in (binary, service):
+        for path in (binary, service, binary.with_name("CyRSAssistantCLI.exe")):
             shutil.copy2(path, destination / path.name)
         runtime = destination / "CyRSAssistantRuntime"
         runtime.mkdir()
@@ -180,6 +205,7 @@ def package(install=False):
         copy_licenses(destination / "LICENCES")
         shutil.copytree(documentation, destination / "CyRSAssistant/Documentation")
         shutil.copy2(ROOT / "tools/dependencies.lock.json", metadata / "dependencies.lock.json")
+        shutil.copyfile(ROOT / "assets/sdk-options.example.json", metadata / "sdk-options.example.json")
         if install:
             (metadata / "INSTALL.txt").write_text(installation_notes(), encoding="utf-8")
         else:
@@ -191,6 +217,7 @@ def package(install=False):
                 (destination / name).write_text(f'import runpy\nrunpy.run_module("{module}", run_name="__main__")\n', encoding="utf-8")
             sources = destination / "source"
             sources.mkdir()
+            shutil.copytree(ROOT / "vendor/cymcpsdk", sources / "vendor/cymcpsdk")
             for name in ("src", "companion", "tools", "tests", "assets", "LICENCES"):
                 shutil.copytree(ROOT / name, sources / name, ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
             for name in ("CMakeLists.txt", "README.md", "README.fr.md", "VERSION.md", "VERSION.fr.md", "LICENSE", "THIRD_PARTY.md"):

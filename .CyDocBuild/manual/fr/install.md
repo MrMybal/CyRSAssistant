@@ -4,11 +4,13 @@ title: Installation et prérequis
 description: Placez l’add-on, le compagnon, DXC et le manuel près de l’exécutable de rendu.
 section: Guides
 order: 1
-sourceRevision: 3
+sourceRevision: 4
 parent: start
 ---
 
 ## Vue d’ensemble {#overview}
+
+Les binaires natifs nécessitent aussi le runtime Microsoft Visual C++ 2015–2022 x64. Le CLI natif fourni utilise les mêmes outils que le tchat ; ses options avancées figurent dans [les options SDK](doc:sdk#options).
 
 Utilisez un jeu Windows 64 bits et ReShade 6.8 avec support complet des add-ons. L’intégration cible l’API 20 et le pont ImGui 1.92.5. Le remplacement natif concerne les pixel shaders Direct3D 11/12, pas toutes les API graphiques.
 
@@ -21,6 +23,7 @@ Utilisez un jeu Windows 64 bits et ReShade 6.8 avec support complet des add-ons.
 Dossier du jeu
   CyRSAssistant.addon64
   CyRSAssistantCompanion.exe
+  CyRSAssistantCLI.exe
   CyRSAssistantRuntime/
     dxcompiler.dll
     dxil.dll
@@ -28,6 +31,7 @@ Dossier du jeu
     LICENSE-MS.txt
   CyRSAssistant/
     INSTALL.txt
+    sdk-options.example.json
     Documentation/
       Documentation.html
       DocAI.md

@@ -28,15 +28,20 @@ class PackagingTests(unittest.TestCase):
         (self.root / ".CyDocBuild/internal/private.txt").write_text("private working record")
         shutil.copytree(source / "assets/screenshots", self.root / "assets/screenshots")
         shutil.copyfile(source / "assets/cyrsassistant-logo-turquoise.png", self.root / "assets/cyrsassistant-logo-turquoise.png")
+        shutil.copyfile(source / "assets/sdk-options.example.json", self.root / "assets/sdk-options.example.json")
         for name in ("LICENSE", "THIRD_PARTY.md", "README.md", "README.fr.md", "VERSION.md", "VERSION.fr.md", "CMakeLists.txt"):
             shutil.copyfile(source / name, self.root / name)
-        for name in ("runtime-licenses.lock.json", "dependencies.lock.json"):
+        for name in ("runtime-licenses.lock.json", "dependencies.lock.json", "cymcpsdk.lock.json"):
             shutil.copyfile(source / "tools" / name, self.root / "tools" / name)
         self.binary = self.root / "build/bin/Release/CyRSAssistant.addon64"
         self.binary.parent.mkdir(parents=True)
         self.binary.write_bytes(f"CyRSAssistant {delivery.VERSION} - Cyberalien".encode())
         self.service = self.binary.with_name("CyRSAssistantCompanion.exe")
         self.service.write_bytes(b"frozen companion test fixture")
+        self.sdk_cli = self.binary.with_name("CyRSAssistantCLI.exe")
+        self.sdk_cli.write_bytes(b"native SDK fixture")
+        self.sdk_cli.with_suffix('.build.json').write_text(json.dumps({'application_version':delivery.VERSION,'sdk':json.loads((source/'tools/cymcpsdk.lock.json').read_text()),'sha256':hashlib.sha256(self.sdk_cli.read_bytes()).hexdigest()}))
+        shutil.copytree(source/'vendor/cymcpsdk',self.root/'vendor/cymcpsdk')
         runtime = self.binary.parent / "CyRSAssistantRuntime"
         runtime.mkdir()
         for name in delivery.RUNTIME_FILES:

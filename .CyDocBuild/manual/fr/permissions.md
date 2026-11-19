@@ -4,11 +4,13 @@ title: Autorisations et validations
 description: Choisissez les actions automatiques, les validations ou les opérations multiples.
 section: Guides
 order: 5
-sourceRevision: 3
+sourceRevision: 4
 parent: chat
 ---
 
 ## Vue d’ensemble {#overview}
+
+Le CLI SDK natif et MCP exigent aussi `--allow-write` pour écrire. Cela ne contourne pas À la demande. Les appels CLI non interactifs échouent sans s’autoriser eux-mêmes ; un appel supervisé peut utiliser `--wait-for-approval`. Le modèle ne peut ni changer ce mode ni valider sa propre action.
 
 | Mode | Comportement |
 | --- | --- |

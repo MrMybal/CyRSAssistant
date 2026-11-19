@@ -4,12 +4,14 @@ title: Clients MCP externes
 description: Connectez un client MCP en lecture seule ou avec l’écriture explicitement activée.
 section: Clients externes
 order: 14
-sourceRevision: 3
+sourceRevision: 5
 ---
 
 ## Vue d’ensemble {#overview}
 
-Un client MCP externe peut lancer le serveur stdio du paquet de développement, notamment OpenCode ou Antigravity s’ils acceptent une commande MCP locale. Ce ne sont pas des choix fournisseur supplémentaires dans l’overlay.
+Dans la version 0.10.0, lancez `CyRSAssistantCLI.exe mcp` depuis le dossier d’installation, avec `--allow-write` uniquement pour un client de confiance. `python -m companion.mcp` redirige vers le serveur SDK. L’écriture respecte aussi le mode du panneau ; À la demande nécessite les vrais boutons. Voir [la connexion, les outils et les résultats conservés](doc:sdk).
+
+Un client MCP externe peut lancer le serveur stdio du paquet de développement, notamment OpenCode ou Antigravity s’ils acceptent une commande MCP locale. La version 0.10.0 propose également OpenCode ACP et Antigravity comme fournisseurs dans l’overlay.
 
 ```bash
 python -m companion.mcp

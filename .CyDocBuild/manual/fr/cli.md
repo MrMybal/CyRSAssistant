@@ -4,11 +4,13 @@ title: Utilisation avancée en ligne de commande
 description: Utilisez la ligne de commande pour inspecter, préparer, appliquer et restaurer.
 section: Guides
 order: 13
-sourceRevision: 3
+sourceRevision: 5
 parent: catalog
 ---
 
 ## Vue d’ensemble {#overview}
+
+La version 0.10.0 fournit aussi **CyRSAssistantCLI.exe**, avec le même registre CyMCPSDK que le tchat et MCP. Voir [les commandes et options SDK](doc:sdk#connection). Les commandes Python ci-dessous restent compatibles.
 
 Le ZIP d’installation est autonome pour l’overlay. Le ZIP de développement ajoute companion/ et les modules Python CLI/MCP. Lancez les commandes depuis ce dossier avec Python 3.11+. Ne lancez pas l’ancien watch avec le service intégré.
 

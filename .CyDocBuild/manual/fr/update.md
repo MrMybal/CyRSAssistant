@@ -4,10 +4,12 @@ title: Mises à jour, sauvegardes et retour arrière
 description: Mettez à jour en conservant presets, réglages, catalogues et shaders générés.
 section: Aide et références
 order: 17
-sourceRevision: 3
+sourceRevision: 4
 ---
 
 ## Vue d’ensemble {#overview}
+
+Conservez aussi votre fichier CyRSAssistant/sdk-options.json et les dossiers privés d’historique ou de résultats que vous avez configurés. Le paquet fournit uniquement sdk-options.example.json et ne remplace pas vos réglages.
 
 1. Fermez le jeu avant de remplacer les binaires. Sauvegardez ensemble add-on, compagnon, runtime et notices.
 2. Préservez séparément ReShade.ini, presets, FX générés, CyRSAssistant/library et replacements.

@@ -4,11 +4,13 @@ title: Advanced command-line use
 description: Use the companion command line to inspect, plan, apply and restore changes.
 section: Guides
 order: 13
-revision: 3
+revision: 5
 parent: catalog
 ---
 
 ## Overview {#overview}
+
+Version 0.10.0 also supplies **CyRSAssistantCLI.exe**, using the same CyMCPSDK registry as chat and MCP. See [SDK commands and options](doc:sdk#connection). The Python commands below remain compatible.
 
 The install ZIP is self-contained for the overlay. The developer ZIP adds companion/ and Python CLI/MCP modules. Run these commands from that package directory with Python 3.11+. Do not run historical watch alongside the integrated service.
 

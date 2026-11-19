@@ -4,13 +4,15 @@ title: Updates, backups and rollback
 description: Update files while keeping presets, settings, catalogs and generated shaders.
 section: Help and reference
 order: 17
-revision: 3
+revision: 4
 ---
 
 ## Overview {#overview}
 
-1. Close the game before replacing binaries. Back up the add-on, companion, runtime and notices together.
-2. Separately preserve ReShade.ini, presets, generated FX, CyRSAssistant/library and replacements.
+The package supplies sdk-options.example.json only. Keep your own sdk-options.json and configured private storage; extraction does not activate or overwrite those settings.
+
+1. Close the game before replacing binaries. Back up the add-on, companion, native CLI, runtime and notices together.
+2. Separately preserve ReShade.ini, presets, generated FX, CyRSAssistant/library, replacements and any private SDK options, history or spool directories.
 3. Extract the new ZIP to the same location, merging folders. Keep Documentation and LICENCES. Do not delete the existing CyRSAssistant folder; it may contain user data.
 4. Start and verify version, language, permissions, provider and effects. Session-only keys need re-entry.
 5. To roll back, close the game and restore the previous matched binary/runtime/notices set. Preserve user configurations unless explicitly restoring their backups too.
