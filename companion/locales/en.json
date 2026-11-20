@@ -252,6 +252,23 @@
     "Conversation history stays in memory. Private session persistence is optional in SDK settings. New conversation clears local context without restoring the rendering.": "Conversation history stays in memory. Private session persistence is optional in SDK settings. New conversation clears local context without restoring the rendering.",
     "Calling an application tool...": "Calling an application tool...",
     "SDK provider connected. Model access is verified by the next message.": "SDK provider connected. Model access is verified by the next message.",
-    "API URL (base or Chat Completions)": "API URL (base or Chat Completions)"
+    "API URL (base or Chat Completions)": "API URL (base or Chat Completions)",
+    "Local MCP server": "Local MCP server",
+    "Enable local MCP": "Enable local MCP",
+    "MCP access profile": "MCP access profile",
+    "Free": "Free",
+    "Local controlled": "Local controlled",
+    "Token only": "Token only",
+    "Protected": "Protected",
+    "Copy MCP address": "Copy MCP address",
+    "Copy MCP token": "Copy MCP token",
+    "Free: connect using the local address alone. All exposed operations run without additional confirmation; argument validation still applies.": "Free: connect using the local address alone. All exposed operations run without additional confirmation; argument validation still applies.",
+    "Controlled profiles use the assistant permission mode below. Token profiles require the session token.": "Controlled profiles use the assistant permission mode below. Token profiles require the session token.",
+    "Starting local MCP...": "Starting local MCP...",
+    "Local MCP is ready.": "Local MCP is ready.",
+    "Local MCP could not start.": "Local MCP could not start.",
+    "Invalid local MCP settings": "Invalid local MCP settings",
+    "Local MCP service could not start. Check the SDK settings and restart local MCP.": "Local MCP service could not start. Check the SDK settings and restart local MCP.",
+    "Local MCP service stopped. Disable and re-enable local MCP to restart it.": "Local MCP service stopped. Disable and re-enable local MCP to restart it."
   }
 }

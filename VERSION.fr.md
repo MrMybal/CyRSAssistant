@@ -2,11 +2,20 @@
 
 [Retour au README](README.fr.md) · [English](VERSION.md)
 
-**Application : 0.10.0 · Statut : PROTOTYPE**<br>
-**Paquet publié : 0.10.0 · Windows x64**<br>
+**Application : 0.10.1 · Statut : PROTOTYPE**<br>
+**Paquet publié : 0.10.1 · Windows x64**<br>
 **Cible : ReShade 6.8 / API 20 avec prise en charge complète des add-ons**
 
 Cette préversion est destinée aux essais et aux retours. La qualité du rendu et la compatibilité dépendent du jeu et des shaders sélectionnés. Sa publication ne constitue pas une prise en charge stable de tous les jeux.
+
+## Changements en 0.10.1 — profils MCP locaux
+
+- CyMCPSDK 0.7.1 à la révision `34d4bcae126bc83d1a2925b5047dac36e3d09d92`, compilé depuis l’archive épinglée des sources locales.
+- MCP HTTP loopback facultatif dans Options, avec Free lorsqu’aucun profil n’est choisi.
+- Conservation des choix explicites ; profils Free, Local contrôlé, Jeton seul et Protégé. Validation des arguments et versions dans tous les profils.
+- Permissions CLI/stdIO et tchat conservées. Le ZIP d’installation inclut les binaires à jour et le manuel hors ligne complet.
+
+[Téléchargements et notes 0.10.1](https://github.com/MrMybal/CyRSAssistant/releases/tag/v0.10.1)
 
 ## Changements en 0.10.0 — intégration CyMCPSDK
 
@@ -47,7 +56,7 @@ Cette préversion ne possède pas de liste détaillée de bugs confirmés. Consu
 - **FX générés** : la génération produit des effets autonomes contraints avec jusqu’à 16 contrôles nommés, sans boucles ni dépendances externes. La compilation ne garantit pas le résultat visuel demandé.
 - **Modification et restauration** : l’ordre des techniques n’est pas modifié. L’annulation conserve une seule modification en mémoire et peut être invalidée par un changement d’inventaire ou un rechargement. Les remplacements de shaders ne sont pas réactivés automatiquement au redémarrage du jeu. L’enregistrement écrit le preset actif ; les sauvegardes historiques automatiques ne sont pas implémentées.
 - **Automatismes indisponibles** : le téléchargement de packs de shaders, l’analyse automatique des captures et l’identification automatique du HUD ne sont pas implémentés.
-- **Fournisseurs et tchat** : les agents natifs nécessitent un CLI compatible installé et un compte. Une session SDK initialisée ne prouve ni l’accès au modèle ni le quota. La réponse est progressive lorsque le fournisseur le permet. Automatique et À la demande autorisent une opération de rendu par message ; Accès complet en autorise huit. Les outils MCP externes sont délégués uniquement sur autorisation explicite et lorsqu’ils sont annoncés en lecture seule. Les comptes des agents natifs et chaque combinaison fournisseur/modèle restent à valider sur leur cible.
+- **Fournisseurs et tchat** : les agents natifs nécessitent un CLI compatible installé et un compte. Une session SDK initialisée ne prouve ni l’accès au modèle ni le quota. La réponse est progressive lorsque le fournisseur le permet. Automatique et À la demande autorisent une opération de rendu par message ; Accès complet en autorise huit. Les outils distants nécessitent une liste d’autorisation explicite. Le tchat, stdio et les profils HTTP contrôlés délèguent les outils en lecture seule ; Free et Jeton seul en HTTP peuvent appeler tous les outils autorisés, selon les permissions de l’application distante. Les comptes des agents natifs et chaque combinaison fournisseur/modèle restent à valider sur leur cible.
 - **Historique et données** : le panneau conserve toute la conversation en mémoire ; le suivi d’état renvoie les 32 derniers messages. Un changement de fournisseur transmet jusqu’à 16 messages / 24 000 caractères. Les checkpoints SDK privés facultatifs conservent les sessions entre redémarrages ; la projection API facultative ne supprime pas l’historique stocké. Sans conservation, fermer le jeu efface le tchat local. La conservation par le fournisseur est distincte. Les clés API restent en mémoire pour la session.
 
 ## Références

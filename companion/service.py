@@ -148,14 +148,26 @@ def retire_provider(entry):
 def serve(pipe):
     client = Client(pipe)
     states = {}
+    local_servers = {}
     with ThreadPoolExecutor(max_workers=4) as pool:
         try:
             failures = 0
             while failures < 6:
                 try:
                     sessions = client.call("list_sessions")["runtimes"]
+                    active={item['runtime'] for item in sessions}
+                    for runtime in list(local_servers):
+                        if runtime not in active:local_servers.pop(runtime).close()
                     for item in sessions:
                         runtime = item["runtime"]
+                        local=client.call("get_mcp_connection",runtime=runtime)["connection"]
+                        server=local_servers.get(runtime)
+                        if server and (not local['enabled'] or server.epoch!=local['epoch']):
+                            local_servers.pop(runtime).close();server=None
+                        if local['enabled']:
+                            if server is None:server=local_servers[runtime]=sdk.LocalMcpServer(client,runtime,local['epoch'])
+                            status=server.poll()
+                            if status['phase']!='starting':client.call('mcp_status',runtime=runtime,epoch=local['epoch'],**status)
                         config = client.call("get_connection", runtime=runtime)["connection"]
                         if not config["wanted"]:
                             old = states.pop(runtime, None)
@@ -191,6 +203,7 @@ def serve(pipe):
                 time.sleep(0.7)
         finally:
             for entry in states.values(): retire_provider(entry)
+            for server in local_servers.values(): server.close()
 
 
 def main():

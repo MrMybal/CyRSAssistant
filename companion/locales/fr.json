@@ -252,6 +252,23 @@
     "Conversation history stays in memory. Private session persistence is optional in SDK settings. New conversation clears local context without restoring the rendering.": "L’historique reste en mémoire. La conservation privée des sessions est facultative dans les réglages SDK. Une nouvelle conversation efface le contexte local sans restaurer le rendu.",
     "Calling an application tool...": "Appel d’un outil de l’application…",
     "SDK provider connected. Model access is verified by the next message.": "Fournisseur SDK connecté. L’accès au modèle est vérifié au prochain message.",
-    "API URL (base or Chat Completions)": "URL API (base ou Chat Completions)"
+    "API URL (base or Chat Completions)": "URL API (base ou Chat Completions)",
+    "Local MCP server": "Serveur MCP local",
+    "Enable local MCP": "Activer le MCP local",
+    "MCP access profile": "Profil d’accès MCP",
+    "Free": "Free",
+    "Local controlled": "Local contrôlé",
+    "Token only": "Jeton seul",
+    "Protected": "Protégé",
+    "Copy MCP address": "Copier l’adresse MCP",
+    "Copy MCP token": "Copier le jeton MCP",
+    "Free: connect using the local address alone. All exposed operations run without additional confirmation; argument validation still applies.": "Free : connectez-vous avec l’adresse locale seule. Toutes les opérations exposées s’exécutent sans confirmation supplémentaire ; les arguments restent validés.",
+    "Controlled profiles use the assistant permission mode below. Token profiles require the session token.": "Les profils contrôlés utilisent le mode d’autorisation de l’assistant ci-dessous. Les profils à jeton exigent le jeton de session.",
+    "Starting local MCP...": "Démarrage du MCP local...",
+    "Local MCP is ready.": "Le MCP local est prêt.",
+    "Local MCP could not start.": "Le MCP local n’a pas pu démarrer.",
+    "Invalid local MCP settings": "Réglages MCP locaux invalides",
+    "Local MCP service could not start. Check the SDK settings and restart local MCP.": "Le service MCP local n’a pas pu démarrer. Vérifiez les réglages SDK et redémarrez le MCP local.",
+    "Local MCP service stopped. Disable and re-enable local MCP to restart it.": "Le service MCP local s’est arrêté. Désactivez puis réactivez le MCP local pour le redémarrer."
   }
 }

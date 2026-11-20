@@ -20,12 +20,13 @@
 #include <filesystem>
 
 extern "C" __declspec(dllexport) const char *NAME = "CyRSAssistant";
-extern "C" __declspec(dllexport) const char *DESCRIPTION = "CyRSAssistant 0.10.0 - Cyberalien - Live shader assistant.";
+extern "C" __declspec(dllexport) const char *DESCRIPTION = "CyRSAssistant 0.10.1 - Cyberalien - Live shader assistant.";
 
 namespace {
 using namespace cyrs;
 using namespace reshade::api;
 #include "connection.hpp"
+#include "local_mcp.hpp"
 struct Parameter { effect_uniform_variable handle; json metadata; size_t count = 0; };
 struct Technique { effect_technique handle; json metadata; };
 struct Runtime {
@@ -46,6 +47,7 @@ struct Runtime {
     ULONGLONG prompt_started = 0;
     Connection connection;
     Permissions permissions;
+    LocalMcp mcp;
     int prompt_mode = 3;
     std::string selected_hash, generated_file, generated_phase = "none", generated_message;
     uint64_t generated_prompt = 0;
@@ -223,6 +225,7 @@ json snapshot(effect_runtime *runtime, Runtime &state) {
     result["conversation_count"] = state.conversation.size();
     result["conversation_id"] = state.conversation_id;
     result["permissions"] = state.permissions.snapshot();
+    result["local_mcp"] = state.mcp.snapshot();
     result["connection"] = {{"provider", c.provider}, {"phase", c.phase}, {"ready", connected(c)}, {"message", c.message}, {"wanted", c.wanted}};
     for (const auto &p : state.parameters) result["parameters"].push_back(p.metadata);
     for (const auto &t : state.techniques) result["techniques"].push_back(t.metadata);
@@ -335,6 +338,31 @@ json execute(effect_runtime *runtime, Runtime &state, const json &request) {
         return {{"ok", true}, {"session", session}, {"runtimes", sessions}};
     }
     require(request.contains("runtime") && request.at("runtime") == state.id, "Explicit runtime required");
+    bool mcp_uncontrolled = false;
+    if(request.contains("_mcp_capability")) {
+        require(state.mcp.enabled && request.at("_mcp_epoch")==state.mcp.epoch && request.at("_mcp_capability")==state.mcp.capability,"Local MCP configuration changed");
+        mcp_uncontrolled=!state.mcp.controlled();
+    }
+    if(method=="configure_mcp_local") {
+        require(request.at("session")==session,"Session changed");
+        const int profile=request.value("profile",state.mcp.profile);require(profile>=0&&profile<=3,"Unknown local MCP profile");
+        state.mcp.profile=profile;state.mcp.enabled=request.at("enabled").get<bool>();if(!state.permissions.request.is_null()&&state.permissions.request.value("prompt_id",uint64_t(1))==0)state.permissions.invalidate();state.mcp.restart();
+        reshade::set_config_value(runtime,"CYRSASSISTANT","MCPEnabled",state.mcp.enabled);
+        reshade::set_config_value(runtime,"CYRSASSISTANT","MCPAccessProfile",profile);
+        if(state.mcp.enabled)launch_companion(bridge.name(),state.language);
+        return {{"ok",true},{"local_mcp",state.mcp.snapshot()}};
+    }
+    if(method=="get_mcp_connection") {
+        auto config=state.mcp.snapshot();config["capability"]=state.mcp.capability;config["token"]=state.mcp.token;
+        return {{"ok",true},{"connection",config}};
+    }
+    if(method=="mcp_status") {
+        require(state.mcp.enabled&&request.at("epoch")==state.mcp.epoch,"Local MCP configuration changed");
+        const auto phase=request.at("phase").get<std::string>(),url=request.value("url",std::string()),message=request.value("message",std::string());
+        require((phase=="ready"||phase=="error")&&message.size()<=2048,"Invalid local MCP status");
+        require(url.empty()||std::regex_match(url,std::regex("http://127\\.0\\.0\\.1:[0-9]{1,5}/mcp")),"Invalid local MCP URL");
+        state.mcp.phase=phase;state.mcp.url=url;state.mcp.message=message;return {{"ok",true}};
+    }
     if (request.contains("prompt_id") && request.at("prompt_id") != 0)
         require(state.pending && request.at("prompt_id") == state.prompt_id, "Prompt cancelled or superseded");
     if (method == "get_help_state") {
@@ -403,9 +431,9 @@ json execute(effect_runtime *runtime, Runtime &state, const json &request) {
         state.permissions.consume(request.at("permission_id").get<uint64_t>(), request.at("prompt_id").get<uint64_t>(), action, request.at("payload"));
         return {{"ok", true}};
     }
-    if ((request.contains("prompt_id") || request.value("_external", false)) && permissioned_write(method) && (state.permissions.mode == 1 || request.contains("permission_id"))) {
+    if ((request.contains("prompt_id") || request.value("_external", false)) && !mcp_uncontrolled && permissioned_write(method) && (state.permissions.mode == 1 || request.contains("permission_id"))) {
         auto payload = request;
-        for (const auto *key : {"protocol", "request_id", "method", "permission_id", "_external"}) payload.erase(key);
+        for (const auto *key : {"protocol", "request_id", "method", "permission_id", "_external", "_mcp_epoch", "_mcp_capability"}) payload.erase(key);
         state.permissions.consume(request.value("permission_id", uint64_t(0)), request.value("prompt_id", uint64_t(0)), method, payload);
     }
     if (method == "cancel_chat") {
@@ -644,6 +672,19 @@ void init(effect_runtime *runtime) {
     reshade::get_config_value(runtime, "CYRSASSISTANT", "Provider", state.connection.provider);
     reshade::get_config_value(runtime, "CYRSASSISTANT", "PermissionMode", state.permissions.mode);
     state.permissions.mode = std::clamp(state.permissions.mode, 0, 2);
+    bool invalid_mcp=false;
+    reshade::get_config_value(runtime,"CYRSASSISTANT","MCPEnabled",state.mcp.enabled);
+    if(!reshade::get_config_value(runtime,"CYRSASSISTANT","MCPAccessProfile",state.mcp.profile)) {
+        const auto file=std::filesystem::u8path(api_string([](char* text,size_t* size){reshade::get_reshade_base_path(text,size);})) / "CyRSAssistant/sdk-options.json";
+        try {
+            if(std::ifstream input(file);input){auto options=json::parse(input);const auto choice=options.value("local_access_profile",options.value("mcp_profile",std::string("free")));
+                const std::vector<std::string> names={"free","local_controlled","token_only","protected_access"};
+                const auto found=std::find(names.begin(),names.end(),choice);require(found!=names.end(),"Unknown local MCP profile");state.mcp.profile=int(found-names.begin());}
+            reshade::set_config_value(runtime,"CYRSASSISTANT","MCPAccessProfile",state.mcp.profile);
+        }catch(...){state.mcp.enabled=false;invalid_mcp=true;}
+    }
+    if(state.mcp.profile<0||state.mcp.profile>3){state.mcp.enabled=false;state.mcp.profile=3;invalid_mcp=true;}
+    state.mcp.restart();if(invalid_mcp){state.mcp.phase="error";state.mcp.message="Invalid local MCP settings";}
     state.connection.provider = std::clamp(state.connection.provider, 0, 9);
     size_t endpoint_size = state.connection.endpoint.size(), model_size = state.connection.model.size();
     reshade::get_config_value(runtime, "CYRSASSISTANT", "Endpoint", state.connection.endpoint.data(), &endpoint_size);
@@ -654,6 +695,7 @@ void init(effect_runtime *runtime) {
     else
         reshade::log::message(reshade::log::level::warning, "CyRSAssistant logo unavailable; using text header.");
     runtimes.emplace(runtime, std::move(state));
+    if(runtimes.at(runtime).mcp.enabled)launch_companion(bridge.name(),runtimes.at(runtime).language);
 }
 void destroy(effect_runtime *runtime) {
     std::lock_guard<std::recursive_mutex> lock(runtime_mutex);
@@ -787,6 +829,18 @@ void overlay(effect_runtime *runtime) {
                     ImGui::EndCombo();
                 }
                 ImGui::TextWrapped("%s", tr("The language is saved for this game. Existing messages keep their original language. A request already in progress finishes in its original language."));
+                ImGui::Separator();
+                ImGui::SeparatorText(tr("Local MCP server"));
+                bool enabled=s.mcp.enabled;int profile=s.mcp.profile;bool changed=ImGui::Checkbox(ui_label("Enable local MCP").c_str(),&enabled);
+                const char *profiles[]={tr("Free"),tr("Local controlled"),tr("Token only"),tr("Protected")};
+                changed=ImGui::Combo(ui_label("MCP access profile").c_str(),&profile,profiles,4)||changed;
+                if(changed){s.mcp.enabled=enabled;s.mcp.profile=profile;if(!s.permissions.request.is_null()&&s.permissions.request.value("prompt_id",uint64_t(1))==0)s.permissions.invalidate();s.mcp.restart();reshade::set_config_value(runtime,"CYRSASSISTANT","MCPEnabled",enabled);reshade::set_config_value(runtime,"CYRSASSISTANT","MCPAccessProfile",profile);if(enabled)launch_companion(bridge.name(),s.language);}
+                ImGui::TextWrapped(tr("Free: connect using the local address alone. All exposed operations run without additional confirmation; argument validation still applies."));
+                ImGui::TextWrapped(tr("Controlled profiles use the assistant permission mode below. Token profiles require the session token."));
+                if(!s.mcp.url.empty()){ImGui::TextWrapped("%s",s.mcp.url.c_str());if(ImGui::SmallButton(ui_label("Copy MCP address").c_str()))ImGui::SetClipboardText(s.mcp.url.c_str());}
+                if(s.mcp.enabled&&s.mcp.require_token()&&ImGui::SmallButton(ui_label("Copy MCP token").c_str()))ImGui::SetClipboardText(s.mcp.token.c_str());
+                if(s.mcp.enabled)ImGui::TextUnformatted(tr(s.mcp.phase=="ready"?"Local MCP is ready.":s.mcp.phase=="starting"?"Starting local MCP...":"Local MCP could not start."));
+                if(!s.mcp.message.empty())ImGui::TextWrapped("%s",tr(s.mcp.message.c_str()));
                 ImGui::Separator();
                 ImGui::SeparatorText(tr("Built-in assistant permissions"));
                 int mode = s.permissions.mode;

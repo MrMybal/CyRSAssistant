@@ -1,7 +1,7 @@
 {
-  "version": "0.7.0",
-  "commit": "791d4d7d7680213b282ec8529d248a10f8494d77",
+  "version": "0.7.1",
+  "commit": "34d4bcae126bc83d1a2925b5047dac36e3d09d92",
   "source": "https://github.com/MrMybal/CyMCPSDK",
-  "archive": "vendor/cymcpsdk/cymcpsdk-0.7.0.tar.gz",
-  "sha256": "985630bb1a196111558ddad53dc0156712dd259d67829b46ae08347b99b945da"
+  "archive": "vendor/cymcpsdk/cymcpsdk-0.7.1.tar.gz",
+  "sha256": "f2c5fc00658cef2ccaf2aaf5fbc2b99766ba0ba3ab8c1d034754b1badc4b7df2"
 }

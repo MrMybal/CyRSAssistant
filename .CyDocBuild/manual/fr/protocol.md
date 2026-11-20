@@ -4,7 +4,7 @@ title: API du pont local
 description: Appelez le pont local avec les jetons du runtime et les données documentées.
 section: Guides
 order: 100
-sourceRevision: 4
+sourceRevision: 5
 kind: api
 parent: mcp
 ---
@@ -78,7 +78,7 @@ Le modèle consulte les inventaires paginés `get_effects` et `get_parameters`. 
 
 `request_action_permission(runtime, session, prompt_id, action, payload, summary)` retourne un identifiant unique et un statut pending/approved. `resolve_action_permission(permission_id, allow)` applique la décision du panneau. Le compagnon garde son signal de présence actif pendant l’attente.
 
-L’accord porte sur le contenu exact, le prompt et l’époque d’autorisation ; il est consommé une fois. La lecture de source emploie `consume_read_permission` avant lecture/transmission. Refus/annulation interrompent l’action. Les écritures MCP permises par `--allow-write` restent distinctes.
+L’accord porte sur le contenu exact, le prompt et l’époque d’autorisation ; il est consommé une fois. La lecture de source emploie `consume_read_permission` avant lecture/transmission. Refus/annulation interrompent l’action. Les écritures MCP stdio exigent `--allow-write` ; HTTP local utilise son [profil d’accès choisi](doc:sdk#local-access).
 
 ## Langue {#language}
 

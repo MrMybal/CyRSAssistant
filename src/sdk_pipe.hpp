@@ -19,6 +19,7 @@ inline Json discover_pipes() {
 class Pipe {
     std::mutex mutex_;
     std::string name_;
+    Json credentials_=Json::object();
     static void transfer(HANDLE pipe, void* data, DWORD size, bool write, const CallContext& c) {
         auto deadline = Clock::now() + std::chrono::seconds(10);
         while (size) {
@@ -50,6 +51,7 @@ class Pipe {
         const std::string prefix = R"(\\.\pipe\CyRSAssistant-)";
         if (!name_.starts_with(prefix) || name_.size()==prefix.size() || name_.substr(prefix.size()).find_first_not_of("0123456789")!=std::string::npos)
             throw Error("InvalidArguments", "Expected a local CyRSAssistant named pipe");
+        for(auto i=credentials_.begin();i!=credentials_.end();++i)args[i.key()]=i.value();
         args["protocol"] = 1; args["request_id"] = random_token(16); args["method"] = method;
         const auto bytes = args.dump();
         if (bytes.size() > 1024 * 1024) throw Error("SizeLimit", "Bridge request exceeds 1 MiB");
@@ -72,6 +74,8 @@ class Pipe {
         if (!result.value("ok", false)) throw Error("ApplicationError", result.value("error", "Add-on operation failed"));
         return result;
     }
+    void credentials(Json value) {credentials_=std::move(value);}
+    Json credentials() const {return credentials_;}
     const std::string& name() const { return name_; }
     std::uint64_t runtime(std::uint64_t requested, const CallContext& c = {}) {
         auto sessions = call("list_sessions", {}, c).at("runtimes");

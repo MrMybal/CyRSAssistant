@@ -5,12 +5,12 @@ description: Utiliser le registre partagé, les résultats privés, les sessions
 section: Référence
 parent: cli
 order: 18
-sourceRevision: 2
+sourceRevision: 4
 ---
 
 ## Vue d’ensemble {#overview}
 
-La version 0.10.0 intègre **CyMCPSDK 0.7.0**, révision `791d4d7d7680213b282ec8529d248a10f8494d77`. Core, Platform, Http, MCP et AI sont compilés depuis l’archive de sources épinglée. La supervision de moteur local et ChatUI ne sont pas liés : l’application utilise des services locaux existants et le pont ImGui de ReShade ne fournit pas CyUI DocumentViews. Le panneau reçoit les événements Conversation depuis un worker ; les modifications ReShade restent sur le thread du jeu.
+La version 0.10.1 intègre **CyMCPSDK 0.7.1**, révision `34d4bcae126bc83d1a2925b5047dac36e3d09d92`. Core, Platform, Http, MCP et AI sont compilés depuis l’archive de sources épinglée. La supervision de moteur local et ChatUI ne sont pas liés : l’application utilise des services locaux existants et le pont ImGui de ReShade ne fournit pas CyUI DocumentViews. Le panneau reçoit les événements Conversation depuis un worker ; les modifications ReShade restent sur le thread du jeu.
 
 ## Opérations partagées {#operations}
 
@@ -48,7 +48,7 @@ La découverte, les schémas et les métadonnées des fournisseurs ne nécessite
 
 L’écriture exige `--allow-write` côté CLI/MCP **et** le mode d’autorisation courant de l’application. Le mode À la demande utilise les véritables boutons du panneau. Un CLI non interactif échoue avec `ApprovalRequired`, sauf si `--wait-for-approval` a été explicitement fourni pour un usage supervisé. Un « oui » du modèle ne vaut pas validation. Les codes de sortie sont 0 en cas de succès, 2 pour un usage CLI invalide, 3 pour un accès refusé ou une validation nécessaire et 1 pour les autres échecs. Les résultats JSON vont sur stdout et les diagnostics sur stderr.
 
-MCP utilise stdio local, lancé avec le même exécutable et les options facultatives `--pipe` et `--allow-write`. L’accès est celui du processus et de l’utilisateur du système ; aucun serveur réseau public ni jeton à coller dans le tchat n’est requis. Les agents natifs nécessitant MCP reçoivent une adresse loopback authentifiée distincte, possédée par le worker SDK. Son secret passe par la configuration privée du fournisseur gérée par le SDK. HTTP prend en charge les requêtes/réponses et SSE fini ; utilisez stdio pour les abonnements SDK persistants.
+Le point d’entrée MCP natif en ligne de commande utilise stdio local, lancé avec le même exécutable et les options facultatives `--pipe` et `--allow-write`. L’accès est celui du processus et de l’utilisateur du système ; aucun serveur réseau public ni jeton à coller dans le tchat n’est requis. Les agents natifs nécessitant MCP reçoivent une adresse loopback authentifiée distincte, possédée par le worker SDK. Son secret passe par la configuration privée du fournisseur gérée par le SDK. HTTP prend en charge les requêtes/réponses et SSE fini ; utilisez stdio pour les abonnements SDK persistants.
 
 
 ```json
@@ -56,6 +56,23 @@ MCP utilise stdio local, lancé avec le même exécutable et les options faculta
 ```
 
 Cette configuration stdio native est générique : utilisez le chemin réel de l’exécutable et le format de votre client. Ajoutez `--pipe` avant `mcp` lorsque plusieurs jeux sont ouverts, et `--allow-write` seulement pour un client de confiance autorisé à écrire.
+
+## Accès MCP HTTP local {#local-access}
+
+Activez **Options > Activer le MCP local**. Le compagnon démarre le serveur indépendamment d’un fournisseur de tchat. Copiez son adresse `http://127.0.0.1:<port>/mcp`. Le serveur écoute uniquement sur loopback ; le port change au redémarrage.
+
+| Profil | Jeton | Opérations |
+| --- | --- | --- |
+| Free (défaut) | Aucun ; adresse seule | Toutes les opérations exposées sans confirmation supplémentaire. |
+| Local contrôlé | Aucun ; adresse seule | Mode d’autorisation existant de l’assistant. |
+| Jeton seul | Jeton Bearer de session | Toutes les opérations exposées sans confirmation supplémentaire. |
+| Protégé | Jeton Bearer de session | Mode d’autorisation existant de l’assistant. |
+
+Les schémas, bornes des paramètres, identité du runtime et jetons session/génération/révision restent vérifiés. Free concerne ce serveur HTTP ; les options d’écriture CLI/stdIO et les autorisations du tchat gardent leur comportement. Les outils distants nécessitent toujours une liste d’autorisation explicite.
+
+Les choix `MCPAccessProfile` existants dans ReShade.ini sont conservés : 0 Free, 1 Local contrôlé, 2 Jeton seul, 3 Protégé. En leur absence, un `local_access_profile` explicite ou l’ancien `mcp_profile` dans sdk-options.json est repris ; sinon le profil migre vers Free. Une valeur explicite inconnue empêche l’activation. `MCPEnabled` reste facultatif. Les autres réglages et fichiers utilisateur sont conservés.
+
+Pour les profils à jeton, **Copier le jeton MCP** copie le jeton de la session. Configurez séparément l’autorisation Bearer du client. Le jeton et la capacité interne du pont sont exclus des instantanés publics, mesures et historiques enregistrés. Un redémarrage ou changement de profil renouvelle le jeton ; désactiver le serveur ferme son processus. L’adresse HTTP interne des agents natifs du tchat reste distincte, avec ses autorisations de tchat.
 
 ## Options indépendantes {#options}
 
@@ -77,7 +94,7 @@ Le panneau conserve toute la conversation en mémoire ; le suivi de l’état ne
 
 ## Autres applications {#remote}
 
-`remote_tools` est une liste d’autorisation explicite. Chaque serveur fournit un `id`, soit une `url` HTTP et un éventuel `token_env`, soit un `executable` natif avec `arguments` et un éventuel `cwd`, et un tableau `tools` des noms distants exacts. Les identifiants secrets appartiennent à la variable d’environnement nommée, jamais à ce JSON. `cyrs_refresh` actualise explicitement les schémas délégués et les caches de lecture. `allow_resources: true` active aussi des outils qualifiés de liste et de lecture des ressources distantes ; suivez leurs liens de blocs via l’outil de lecture de ce serveur. Seuls les outils annoncés en lecture seule sont délégués ; les mutations distantes sont refusées car l’annulation et la validation du rendu ReShade ne couvrent pas les écritures d’une autre application.
+`remote_tools` est une liste d’autorisation explicite. Chaque serveur fournit un `id`, soit une `url` HTTP et un éventuel `token_env`, soit un `executable` natif avec `arguments` et un éventuel `cwd`, et un tableau `tools` des noms distants exacts. Les identifiants secrets appartiennent à la variable d’environnement nommée, jamais à ce JSON. `cyrs_refresh` actualise explicitement les schémas délégués et les caches de lecture. `allow_resources: true` active aussi des outils qualifiés de liste et de lecture des ressources distantes ; suivez leurs liens de blocs via l’outil de lecture de ce serveur. Le tchat, stdio et les profils HTTP contrôlés délèguent uniquement les outils annoncés en lecture seule. Free et Jeton seul en HTTP peuvent appeler tout outil explicitement autorisé ; l’application distante applique toujours ses propres permissions.
 
 Le SDK suit la pagination des outils distants et préserve chaque schéma d’entrée sélectionné. Les mots-clés de schéma ou capacités de transport non pris en charge provoquent une erreur plutôt qu’un connecteur fictif. Les erreurs distantes remontent comme échecs d’outil. Aucun dossier de recherche système, exécutable ripgrep, shell, poids de modèle, installateur de pilote ou découverte automatique de serveurs externes n’est activé par défaut.
 

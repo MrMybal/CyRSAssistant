@@ -4,7 +4,7 @@ title: Se repérer dans l’interface
 description: Repérez Tchat, Connexion, Effets, Shaders, Options et l’aide contextuelle.
 section: Guides
 order: 2
-sourceRevision: 3
+sourceRevision: 4
 parent: start
 ---
 
@@ -14,7 +14,7 @@ parent: start
 | --- | --- |
 | En-tête | État fournisseur et autorisations. |
 | Tchat | Conversation, progression, annulation et validations. |
-| Options | Langue et mode d’autorisation. |
+| Options | Langue, mode d’autorisation de l’assistant et MCP HTTP facultatif avec son profil d’accès. |
 | Connexion | Fournisseur, modèle, URL, clé de session et connexion. |
 | Effets | Scan/rechargement, techniques, valeurs, annulation, presets et FX générés. |
 | Shaders | Empreintes natives, inspection et restauration. |

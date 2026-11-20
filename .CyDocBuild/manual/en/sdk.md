@@ -5,12 +5,12 @@ description: Use the shared operation registry, private results, session history
 section: Reference
 parent: cli
 order: 18
-revision: 2
+revision: 4
 ---
 
 ## Overview {#overview}
 
-Version 0.10.0 integrates **CyMCPSDK 0.7.0**, revision `791d4d7d7680213b282ec8529d248a10f8494d77`. Core, Platform, Http, MCP and AI are compiled from the pinned source archive. Local engine supervision and ChatUI are not linked: the application connects to existing local services, and ReShade's ImGui bridge does not provide CyUI DocumentViews. The existing chat panel receives Conversation events on a worker, while all ReShade changes stay on the game's thread.
+Version 0.10.1 integrates **CyMCPSDK 0.7.1**, revision `34d4bcae126bc83d1a2925b5047dac36e3d09d92`. Core, Platform, Http, MCP and AI are compiled from the pinned source archive. Local engine supervision and ChatUI are not linked: the application connects to existing local services, and ReShade's ImGui bridge does not provide CyUI DocumentViews. The existing chat panel receives Conversation events on a worker, while all ReShade changes stay on the game's thread.
 
 ## Shared operations {#operations}
 
@@ -48,7 +48,7 @@ Discovery, schemas and provider metadata need no game or graphical interface. Li
 
 Writes require `--allow-write` for the CLI/MCP server **and** the current application permission mode. Ask mode requires the actual overlay approval buttons. A noninteractive CLI write fails with `ApprovalRequired` unless `--wait-for-approval` was explicitly supplied for supervised use. No `yes` in a model reply grants approval. Exit codes are 0 for success, 2 for invalid CLI usage, 3 for denied access/required approval and 1 for other failures. JSON results go to stdout and diagnostics to stderr.
 
-MCP uses local stdio, launched with the same executable and optional `--pipe`/`--allow-write` flags. Access is the local process/OS user's access; there is no public network listener or token to paste into chat. Native agents that need MCP receive a separate authenticated loopback endpoint owned by the SDK worker. Its secret is passed through the SDK's private provider configuration. HTTP supports request/response and finite SSE; use stdio for persistent SDK subscriptions.
+The native command-line MCP entry point uses local stdio, launched with the same executable and optional `--pipe`/`--allow-write` flags. Access is the local process/OS user's access; there is no public network listener or token to paste into chat. Native agents that need MCP receive a separate authenticated loopback endpoint owned by the SDK worker. Its secret is passed through the SDK's private provider configuration. HTTP supports request/response and finite SSE; use stdio for persistent SDK subscriptions.
 
 
 ```json
@@ -56,6 +56,23 @@ MCP uses local stdio, launched with the same executable and optional `--pipe`/`-
 ```
 
 This is a generic native stdio configuration; use the actual executable path and the client’s configuration format. Add `--pipe` before `mcp` when several games run, and `--allow-write` only for a trusted writing client.
+
+## Local HTTP MCP access {#local-access}
+
+Enable **Options > Enable local MCP**. The local companion starts the server independently of a chat provider. Copy its `http://127.0.0.1:<port>/mcp` address. The server listens on loopback only; the port changes when restarted.
+
+| Profile | Token | Operations |
+| --- | --- | --- |
+| Free (default) | None; address alone | All exposed operations without extra confirmation. |
+| Local controlled | None; address alone | Existing assistant permission mode. |
+| Token only | Session Bearer token | All exposed operations without extra confirmation. |
+| Protected | Session Bearer token | Existing assistant permission mode. |
+
+Argument schemas, parameter bounds, runtime identity and session/generation/revision checks always apply. Free applies to this HTTP server; CLI/stdIO write flags and the integrated chat permission mode keep their existing behavior. An explicit remote-tool allowlist is still required.
+
+Existing `MCPAccessProfile` choices in ReShade.ini are preserved (0 Free, 1 Local controlled, 2 Token only, 3 Protected). When absent, an explicit `local_access_profile` or legacy `mcp_profile` in sdk-options.json is retained; otherwise the choice migrates to Free. Unknown explicit values stop activation. `MCPEnabled` remains opt-in. Other settings and user files are preserved.
+
+For token profiles, **Copy MCP token** copies the current session token. Configure your client’s Bearer authorization separately. Tokens and the internal bridge capability are excluded from public state snapshots, metrics and saved conversation history. A restart or profile change creates a new token; disabling the server closes its owned process. The internal HTTP endpoint used by native chat agents is separate and retains its chat permissions.
 
 ## Independent options {#options}
 
@@ -77,7 +94,7 @@ The overlay keeps the full in-memory conversation; state polling returns only it
 
 ## Other applications {#remote}
 
-`remote_tools` is an explicit allowlist. Each server has an `id`, either an HTTP `url` plus optional `token_env`, or a native `executable` with `arguments` and optional `cwd`, and a `tools` array of exact remote names. Credentials belong in the named environment variable, never in this JSON. `cyrs_refresh` explicitly refreshes forwarded schemas and read caches. `allow_resources: true` additionally enables qualified remote resource listing/reading tools; follow remote chunk links through that server’s read tool. Only tools advertised as read-only are delegated; external mutations are refused because ReShade's undo and rendering approval cannot cover another application's writes.
+`remote_tools` is an explicit allowlist. Each server has an `id`, either an HTTP `url` plus optional `token_env`, or a native `executable` with `arguments` and optional `cwd`, and a `tools` array of exact remote names. Credentials belong in the named environment variable, never in this JSON. `cyrs_refresh` explicitly refreshes forwarded schemas and read caches. `allow_resources: true` additionally enables qualified remote resource listing/reading tools; follow remote chunk links through that server’s read tool. Chat, stdio and controlled HTTP profiles delegate only tools advertised as read-only. Free and Token only HTTP profiles can invoke every explicitly allowlisted tool; the remote application still enforces its own permissions.
 
 The SDK follows remote tool pagination and preserves each selected input schema. Unsupported schema keywords or transport capabilities produce an error rather than an invented connector. Remote errors return as tool failures. No filesystem search root, ripgrep executable, shell, model weights, driver installer or automatic external server discovery is enabled by default.
 

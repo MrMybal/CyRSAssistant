@@ -4,13 +4,15 @@ title: Permissions and approvals
 description: Choose automatic actions, individual approvals or multiple rendering operations.
 section: Guides
 order: 5
-revision: 4
+revision: 5
 parent: chat
 ---
 
 ## Overview {#overview}
 
-The native SDK CLI and MCP additionally require `--allow-write` for writes. This does not bypass Ask mode. Noninteractive CLI calls fail rather than approve themselves; supervised callers can use `--wait-for-approval`. The model cannot change the permission mode or resolve its own approval.
+The modes below govern the integrated assistant and controlled HTTP MCP profiles. HTTP **Free** and **Token only** allow all exposed operations without additional action confirmation, independently of the chat mode. **Local controlled** and **Protected** retain these application approvals. [Choose the HTTP access profile](doc:sdk#local-access).
+
+The native SDK CLI and stdio MCP additionally require `--allow-write` for writes. This does not bypass Ask mode. Noninteractive CLI calls fail rather than approve themselves; supervised callers can use `--wait-for-approval`. The model cannot change the permission mode or resolve its own approval.
 
 | Mode | Behavior |
 | --- | --- |
@@ -27,7 +29,7 @@ Select Options > Permission mode. The choice is saved per game. Changing mode ca
 Approval belongs to one action, request and exact payload. A changed action needs another approval. Denying or cancelling interrupts the pending action. Review source-transmission summaries before approving.
 
 ```callout
-{"type": "info", "title": "Note", "body": "Full access covers the add-on’s tools. It does not grant a terminal, arbitrary files or permissions in another AI app. External MCP writing is separately controlled by --allow-write."}
+{"type": "info", "title": "Note", "body": "Full access covers the add-on’s tools. It does not grant a terminal, arbitrary files or permissions in another AI app. Stdio MCP writing is separately controlled by --allow-write."}
 ```
 
 ## Related topics {#related}

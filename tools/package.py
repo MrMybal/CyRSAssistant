@@ -116,6 +116,9 @@ and the Microsoft Visual C++ 2015-2022 x64 runtime.
 6. Optional external tools: run CyRSAssistantCLI.exe --help. MCP uses
    CyRSAssistantCLI.exe mcp (read-only unless --allow-write). Ask mode
    also requires approval in the overlay.
+   For optional local HTTP MCP, enable it in Options and copy its address.
+   Free is the default profile: no token or additional action confirmation.
+   Other profiles remain available; argument validation always applies.
 7. Open Help > Open documentation for the complete local CyDoc manual,
    or use a contextual Help button. It opens the matching language/page via
    file:// in your default browser. You can also open
@@ -147,6 +150,9 @@ Windows 64 bits, ainsi que le runtime Microsoft Visual C++ 2015-2022 x64.
 7. Outils externes facultatifs : CyRSAssistantCLI.exe --help. MCP utilise
    CyRSAssistantCLI.exe mcp (lecture seule sans --allow-write). Le mode
    À la demande nécessite aussi une validation dans le panneau.
+   Pour le MCP HTTP local facultatif, activez-le dans Options puis copiez
+   son adresse. Free est le défaut, sans jeton ni confirmation supplémentaire.
+   Les autres profils restent disponibles ; les arguments sont toujours validés.
 8. Ouvrez Aide > Ouvrir la documentation, ou un bouton d'aide contextuel.
    CyDoc ouvre la bonne langue/page via file:// dans le navigateur par défaut.
    Vous pouvez aussi ouvrir CyRSAssistant/Documentation/Documentation.html.

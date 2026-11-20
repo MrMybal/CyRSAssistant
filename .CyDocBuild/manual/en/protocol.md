@@ -4,7 +4,7 @@ title: Local bridge API
 description: Call the local bridge with current runtime tokens and documented payloads.
 section: Guides
 order: 100
-revision: 4
+revision: 5
 kind: api
 parent: mcp
 ---
@@ -78,7 +78,7 @@ The model tools page inventories with `get_effects` and `get_parameters`. `read_
 
 `request_action_permission(runtime, session, prompt_id, action, payload, summary)` returns a unique permission ID and pending/approved status. `resolve_action_permission(permission_id, allow)` applies the panel decision. The companion keeps its heartbeat alive while waiting.
 
-An approval is bound to the exact payload, prompt and permission epoch, and consumed once. Source reading uses `consume_read_permission` before reading/transmission. Denial/cancellation interrupts the action. External MCP writes enabled by `--allow-write` remain separate.
+An approval is bound to the exact payload, prompt and permission epoch, and consumed once. Source reading uses `consume_read_permission` before reading/transmission. Denial/cancellation interrupts the action. Stdio MCP writes require `--allow-write`; local HTTP uses its [selected access profile](doc:sdk#local-access).
 
 ## Language {#language}
 

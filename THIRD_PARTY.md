@@ -4,7 +4,7 @@ The complete license texts are in `LICENCES/` at the root of both ZIP distributi
 
 | Component | Use | Included notice |
 | --- | --- | --- |
-| CyMCPSDK 0.7.0 | Native operation registry, conversations, MCP and console frontend | LICENCES/CyMCPSDK.txt, LICENCES/cpp-httplib.txt, LICENCES/PicoSHA2.txt |
+| CyMCPSDK 0.7.1 | Native operation registry, conversations, MCP and console frontend | LICENCES/CyMCPSDK.txt, LICENCES/cpp-httplib.txt, LICENCES/PicoSHA2.txt |
 | CyDoc 0.1.0 (pinned source archive) | Local documentation reader and image module | LICENCES/CyDoc.txt |
 | ReShade 6.8.0 | Add-on API and ImGui bridge | LICENCES/ReShade.txt |
 | Dear ImGui 1.92.5-docking | Overlay interface | LICENCES/DearImGui.txt |

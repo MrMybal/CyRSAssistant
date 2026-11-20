@@ -4,13 +4,15 @@ title: Autorisations et validations
 description: Choisissez les actions automatiques, les validations ou les opérations multiples.
 section: Guides
 order: 5
-sourceRevision: 4
+sourceRevision: 5
 parent: chat
 ---
 
 ## Vue d’ensemble {#overview}
 
-Le CLI SDK natif et MCP exigent aussi `--allow-write` pour écrire. Cela ne contourne pas À la demande. Les appels CLI non interactifs échouent sans s’autoriser eux-mêmes ; un appel supervisé peut utiliser `--wait-for-approval`. Le modèle ne peut ni changer ce mode ni valider sa propre action.
+Les modes ci-dessous gouvernent l’assistant intégré et les profils HTTP contrôlés. **Free** et **Jeton seul** autorisent toutes les opérations exposées sans confirmation supplémentaire, indépendamment du mode du tchat. **Local contrôlé** et **Protégé** conservent ces validations applicatives. [Choisir le profil HTTP](doc:sdk#local-access).
+
+Le CLI SDK natif et MCP stdio exigent aussi `--allow-write` pour écrire. Cela ne contourne pas À la demande. Les appels CLI non interactifs échouent sans s’autoriser eux-mêmes ; un appel supervisé peut utiliser `--wait-for-approval`. Le modèle ne peut ni changer ce mode ni valider sa propre action.
 
 | Mode | Comportement |
 | --- | --- |
@@ -27,7 +29,7 @@ Choisissez Options > Mode d’autorisation. Le choix est mémorisé par jeu. Cha
 L’autorisation concerne une action, une demande et son contenu exact. Une action modifiée doit être approuvée à nouveau. Refuser ou annuler interrompt l’action en attente. Lisez le résumé d’envoi des sources avant d’autoriser.
 
 ```callout
-{"type": "info", "title": "Note", "body": "L’accès complet concerne les outils de l’add-on. Il ne donne ni terminal, ni fichiers arbitraires, ni permissions d’une autre application IA. L’écriture MCP externe reste contrôlée par --allow-write."}
+{"type": "info", "title": "Note", "body": "L’accès complet concerne les outils de l’add-on. Il ne donne ni terminal, ni fichiers arbitraires, ni permissions d’une autre application IA. L’écriture MCP stdio reste contrôlée par --allow-write."}
 ```
 
 ## À lire aussi {#related}

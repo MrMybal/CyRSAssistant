@@ -35,10 +35,10 @@ https://github.com/MrMybal/CyDoc
 Commit: 6ddf9a582defb2f11fbb3f992afef6f98dcadc93
 License: MIT (CyDoc.txt). Matching local package: source/.CyDocBuild/vendor/cydoc-0.1.0.tgz in the developer ZIP.
 
-CyMCPSDK 0.7.0 - Core, Platform, Http, MCP and AI (MIT)
+CyMCPSDK 0.7.1 - Core, Platform, Http, MCP and AI (MIT)
 https://github.com/MrMybal/CyMCPSDK
-Commit: 791d4d7d7680213b282ec8529d248a10f8494d77
-Native source snapshot: source/vendor/cymcpsdk/cymcpsdk-0.7.0.tar.gz in the developer ZIP.
+Commit: 34d4bcae126bc83d1a2925b5047dac36e3d09d92
+Native source snapshot: source/vendor/cymcpsdk/cymcpsdk-0.7.1.tar.gz in the developer ZIP.
 Pinned archive digest: source/tools/cymcpsdk.lock.json.
 cpp-httplib 0.66.0 (MIT): https://github.com/yhirose/cpp-httplib
 PicoSHA2 (MIT): https://github.com/okdshin/PicoSHA2

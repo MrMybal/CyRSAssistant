@@ -2,11 +2,20 @@
 
 [Back to README](README.md) · [Français](VERSION.fr.md)
 
-**Application: 0.10.0 · Stage: PROTOTYPE**<br>
-**Published package: 0.10.0 · Windows x64**<br>
+**Application: 0.10.1 · Stage: PROTOTYPE**<br>
+**Published package: 0.10.1 · Windows x64**<br>
 **Target: ReShade 6.8 / API 20 with full add-on support**
 
 This prerelease is intended for testing and feedback. Rendering quality and compatibility depend on the game and selected shaders. Publication does not establish stable support for every game.
+
+## Changes in 0.10.1 — local MCP profiles
+
+- CyMCPSDK 0.7.1 at `34d4bcae126bc83d1a2925b5047dac36e3d09d92`, built from the pinned local source snapshot.
+- Optional loopback HTTP MCP in Options, defaulting to Free for missing profile choices.
+- Preserve explicit profiles; provide Free, Local controlled, Token only and Protected. Keep argument/version validation in every profile.
+- CLI/stdIO and integrated chat retain their existing permissions. The install ZIP includes the updated binaries and complete offline manual.
+
+[Download 0.10.1 and release notes](https://github.com/MrMybal/CyRSAssistant/releases/tag/v0.10.1)
 
 ## Changes in 0.10.0 — CyMCPSDK integration
 
@@ -47,7 +56,7 @@ There is no itemized confirmed-bug list for this prototype release. Consult the 
 - **Generated FX:** generation produces constrained, standalone effects with up to 16 named controls, without loops or external dependencies. Compilation does not guarantee the requested visual result.
 - **Editing and restoration:** technique order is not changed. Undo keeps one edit in memory and can be invalidated by an inventory change or reload. Shader replacements are not automatically reactivated when the game restarts. Saving writes the active preset; automatic historical preset backups are not implemented.
 - **Unavailable automation:** shader-pack downloading, automatic screenshot analysis and automatic HUD identification are not implemented.
-- **Providers and chat:** native agents require a compatible installed CLI and account. An initialized SDK session does not prove model access or quota. The response streams when the selected provider supports it. Automatic and Ask each time allow one rendering operation per message; Full access allows eight. External MCP tools are delegated only when explicitly allowed and advertised read-only. Native-agent accounts and each provider/model combination still need target validation.
+- **Providers and chat:** native agents require a compatible installed CLI and account. An initialized SDK session does not prove model access or quota. The response streams when the selected provider supports it. Automatic and Ask each time allow one rendering operation per message; Full access allows eight. Remote tools require an explicit allowlist. Chat, stdio and controlled HTTP profiles delegate read-only tools; HTTP Free and Token only can invoke all allowlisted tools, subject to the remote application’s own permissions. Native-agent accounts and each provider/model combination still need target validation.
 - **History and data:** the overlay retains the complete in-memory conversation; state polling returns the latest 32 messages. A provider switch seeds up to 16 prior messages / 24,000 characters. Optional private SDK checkpoints retain sessions across restarts; optional API context projection does not discard stored history. Without persistence, closing the game clears local chat. Provider-side retention is separate. API keys remain in session memory.
 
 ## References

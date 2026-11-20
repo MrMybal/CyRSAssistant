@@ -166,3 +166,35 @@ def connect(config, client, runtime):
 
 def cli(arguments):
     return subprocess.call([str(executable()), *arguments])
+
+
+class LocalMcpServer:
+    """Owned local HTTP service; the native host supplies the selected access profile."""
+    def __init__(self, client, runtime, epoch):
+        self.epoch=epoch
+        self.status={'phase':'starting','url':'','message':''}
+        state=client.state(runtime)
+        args=[str(executable()),'--pipe',client.pipe,'--runtime',str(runtime)]
+        options=Path(state['base_path'])/'CyRSAssistant/sdk-options.json'
+        if options.is_file():args+=['--options',str(options)]
+        self.process=subprocess.Popen(args+['http'],stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.DEVNULL,
+            text=True,encoding='utf-8',creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
+        self.reader=threading.Thread(target=self._read,daemon=True);self.reader.start()
+    def _read(self):
+        try:
+            line=self.process.stdout.readline()
+            value=json.loads(line)
+            if value['epoch']!=self.epoch:raise ValueError('Local MCP epoch changed')
+            self.status={'phase':'ready','url':value['url'],'message':''}
+        except (OSError,ValueError,KeyError):
+            self.status={'phase':'error','url':'','message':'Local MCP service could not start. Check the SDK settings and restart local MCP.'}
+    def poll(self):
+        if self.process.poll() is not None:
+            return {'phase':'error','url':'','message':'Local MCP service stopped. Disable and re-enable local MCP to restart it.'}
+        return self.status
+    def close(self):
+        if self.process.poll() is None:
+            try:self.process.stdin.close();self.process.wait(timeout=5)
+            except (OSError,subprocess.TimeoutExpired):self.process.kill();self.process.wait(timeout=5)
+        self.reader.join(timeout=1)
+        self.process.stdout.close()

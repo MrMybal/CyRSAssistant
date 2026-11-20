@@ -4,7 +4,7 @@ title: Find your way around
 description: Find Chat, Connection, Effects, Shaders, Options and contextual help.
 section: Guides
 order: 2
-revision: 3
+revision: 4
 parent: start
 ---
 
@@ -14,7 +14,7 @@ parent: start
 | --- | --- |
 | Header | Provider status and permission mode. |
 | Chat | Conversation, progress, cancellation and approvals. |
-| Options | Language and permission mode. |
+| Options | Language, assistant permission mode and optional HTTP MCP with its access profile. |
 | Connection | Provider, model, endpoint, session-only key and connection. |
 | Effects | Scan/reload, techniques, values, undo, presets and generated FX. |
 | Shaders | Native hashes, inspection and restoration. |

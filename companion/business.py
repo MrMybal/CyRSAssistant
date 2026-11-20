@@ -9,7 +9,11 @@ from . import catalog
 from .__main__ import library_path, scan_state
 
 def run(request):
-    client=Client(request['pipe']); state=client.state(request['runtime'])
+    client=Client(request['pipe'])
+    original=client.call
+    credentials=request.get('bridge_credentials',{})
+    client.call=lambda method,**args:original(method,**args,**credentials)
+    state=client.state(request['runtime'])
     args=request['arguments']; expected=request.get('expected',{})
     if any(state.get(k)!=v for k,v in expected.items()): raise ValueError('Instance changed before catalogue operation')
     if args.get('prompt_id') and (not state['prompt']['pending'] or state['prompt']['id']!=args['prompt_id']): raise ValueError('Request cancelled')

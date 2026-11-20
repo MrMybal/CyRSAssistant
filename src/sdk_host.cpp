@@ -27,7 +27,7 @@ Json read_config(const std::filesystem::path& file) {
 class Host {
     Pipe pipe_;
     std::uint64_t runtime_;
-    bool writes_, integrated_;
+    bool writes_, integrated_, controlled_=true;
     Json options_, turn_ = Json::object();
     std::mutex turn_mutex_, action_mutex_;
     size_t mutations_ = 0;
@@ -88,7 +88,7 @@ class Host {
                 op.read_only=tool.value("annotations",Json::object()).value("readOnlyHint",false);
                 const bool read=op.read_only;
                 if(read){std::lock_guard lock(remote_policy_mutex_);remote_reads_.insert(op.name);}else{std::lock_guard lock(remote_policy_mutex_);remote_reads_.erase(op.name);}
-                op.handler=[this,remote,name,read](const Json& args,const CallContext& c){if(integrated_)active(c);if(!read)throw Error("PermissionDenied","Remote mutations are not enabled; configure read-only external tools");auto value=remote->call_tool(name,args,c.cancellation);if(value.value("isError",false))throw Error("RemoteToolError","External application reported a tool failure");return value;};
+                op.handler=[this,remote,name,read](const Json& args,const CallContext& c){if(integrated_)active(c);if(!read&&controlled_)throw Error("PermissionDenied","Remote mutations are not enabled; configure read-only external tools");auto value=remote->call_tool(name,args,c.cancellation);if(value.value("isError",false))throw Error("RemoteToolError","External application reported a tool failure");return value;};
                 current.insert(op.name);auto found=remote_descriptors_.find(op.name);if(found==remote_descriptors_.end()){remote_descriptors_[op.name]=tool;registry->add(std::move(op));}else if(found->second!=tool){found->second=tool;registry->replace(std::move(op));}
             }
 
@@ -128,8 +128,8 @@ class Host {
                     if(!method.starts_with("catalog_") && method!="store_effect_description")++mutations_;
                     args["prompt_id"]=turn().at("prompt_id");
                 }
-                const auto permission=approve(method,args,state,c); args["permission_id"]=permission;
-            } else {
+                if(controlled_){const auto permission=approve(method,args,state,c); args["permission_id"]=permission;}
+            } else if(controlled_) {
                 Json payload = method=="read_effect_source" ? Json{{"file",args.at("file")},{"offset",args.value("offset",size_t(0))}} : Json{{"hash",args.at("hash")}};
                 const auto id=approve(method,payload,state,c);
                 pipe_.call("consume_read_permission",{{"runtime",state.at("runtime")},{"session",state.at("session")},{"prompt_id",integrated_?turn().at("prompt_id"):Json(0)},{"permission_id",id},{"action",method},{"payload",payload}},c);
@@ -141,7 +141,7 @@ class Host {
             auto current=pipe_.state(args.at("runtime"),c);publish(current);result={{"refreshed",true},{"revision",current.at("revision")}};
         } else if(method=="catalog_read" || method=="catalog_scan" || method=="catalog_export" || method=="catalog_import" || method=="store_effect_description") {
             if(state.is_null())state=pipe_.state(args.at("runtime"),c);
-            if(!read_only) {
+            if(!read_only&&controlled_) {
                 auto payload=args;payload.erase("permission_id");
                 pipe_.call("consume_application_permission",{{"runtime",state.at("runtime")},{"session",state.at("session")},{"prompt_id",integrated_?turn().at("prompt_id"):Json(0)},{"action",method},{"payload",payload},{"permission_id",args.at("permission_id")}},c);
             }
@@ -149,7 +149,7 @@ class Host {
             ProcessOptions helper;helper.executable=std::filesystem::path(path).parent_path()/L"CyRSAssistantCompanion.exe";helper.arguments={"--sdk-business"};
             Process process(helper);
             Json expected=Json::object();for(const auto* key:{"session","generation","revision"})expected[key]=state.at(key);
-            process.write(Json({{"pipe",pipe_.name()},{"runtime",state.at("runtime")},{"method",method},{"arguments",args},{"expected",expected}}).dump()+"\n",c.cancellation);
+            process.write(Json({{"pipe",pipe_.name()},{"runtime",state.at("runtime")},{"method",method},{"arguments",args},{"expected",expected},{"bridge_credentials",pipe_.credentials()}}).dump()+"\n",c.cancellation);
             process.close_input();ProcessLine line;std::string reply;
             while(process.next(line,c.cancellation))if(!line.stderr_stream)reply+=line.text;
             if(process.wait(c.cancellation)!=0)throw Error("ApplicationError","Catalogue helper did not complete");
@@ -211,7 +211,13 @@ class Host {
     std::shared_ptr<ResourceRegistry> resources;
     std::shared_ptr<ChangeFeed> changes;
     std::shared_ptr<PerformanceMonitor> performance;
-    Host(std::string pipe,uint64_t runtime,bool writes,bool integrated,Json options):pipe_(std::move(pipe)),runtime_(runtime),writes_(writes),integrated_(integrated),options_(std::move(options)) {
+    Host(std::string pipe,uint64_t runtime,bool writes,bool integrated,Json options,Json local=Json()):pipe_(std::move(pipe)),runtime_(runtime),writes_(writes),integrated_(integrated),options_(std::move(options)) {
+        if(!local.is_null()) {
+            static constexpr LocalAccessProfile profiles[]={LocalAccessProfile::free,LocalAccessProfile::local_controlled,LocalAccessProfile::token_only,LocalAccessProfile::protected_access};
+            const int profile=local.at("profile");if(profile<0||profile>3)throw Error("Configuration","Unknown local MCP profile");
+            controlled_=local_access_settings(profiles[profile]).control_operations;
+            pipe_.credentials({{"_mcp_epoch",local.at("epoch")},{"_mcp_capability",local.at("capability")}});
+        }
         if(options_.value("notifications",false))changes=std::make_shared<ChangeFeed>();
         if(options_.value("metrics",false)) {
             PerformanceOptions p;
@@ -226,7 +232,7 @@ class Host {
             ro.max_disk_bytes=options_.value("disk_quota_bytes",size_t(256*1024*1024));
         }
         resources=std::make_shared<ResourceRegistry>(Policy::allow_all(),ro);resources->set_change_feed(changes);
-        registry=std::make_shared<Registry>(Policy([this](const CallContext&,const std::string& name,const Json&){
+        registry=std::make_shared<Registry>(!controlled_?Policy::allow_all():Policy([this](const CallContext&,const std::string& name,const Json&){
             for(const auto& op:Json::parse(sdk_catalogue))if(op.at("name")==name)return writes_||op.at("annotations").value("readOnlyHint",false)?Decision::allow:Decision::deny;
             std::lock_guard lock(remote_policy_mutex_);return writes_||remote_reads_.contains(name)?Decision::allow:Decision::deny;
         }));
@@ -390,7 +396,7 @@ int wmain(int argc,wchar_t** argv) {
         if(args.empty()||args[0]=="--help"||args[0]=="help"){
             std::cout << "CyRSAssistantCLI - CyMCPSDK " << cymcp::version << "\n"
                 "Usage: CyRSAssistantCLI [--pipe PIPE] [--runtime N] [--allow-write] [--options FILE] COMMAND\n"
-                "Commands: discover | tools | describe NAME | call NAME JSON (or --args-file FILE) | mcp | providers | detect\n"
+                "Commands: discover | tools | describe NAME | call NAME JSON (or --args-file FILE) | mcp | http (owned local HTTP service) | providers | detect\n"
                 "Tools/schemas/providers work without a game; live operations require a running ReShade instance.\n"
                 "Writes require --allow-write and the application's current permission mode. Ask mode waits for overlay approval.\n";return 0;
         }
@@ -404,6 +410,20 @@ int wmain(int argc,wchar_t** argv) {
         ProviderRegistry providers;
         if(command=="providers"){output(providers.describe());return 0;}
         if(command=="detect") {Json detected=Json::array();for(const auto& c:providers.discover())detected.push_back({{"provider",c.provider_id},{"state",c.state},{"source",c.source},{"models",c.models},{"error",c.error_code}});output(detected);return 0;}
+        if(command=="http") {
+            Pipe connection(pipe);runtime=connection.runtime(runtime);
+            auto local=connection.call("get_mcp_connection",{{"runtime",runtime}}).at("connection");
+            if(!local.at("enabled").get<bool>())throw Error("Configuration","Enable local MCP in ReShade Options first");
+            Host host(pipe,runtime,true,false,options,local);
+            McpServer mcp(*host.registry,"CyRSAssistant",host.server_options());
+            auto handler=[&](const Json& request,const CallContext& c){return mcp_images(mcp.handle(request,c));};
+            std::unique_ptr<LocalHttpServer> server;
+            if(local.at("requires_token").get<bool>())server=std::make_unique<LocalHttpServer>(local.at("token").get<std::string>(),handler);
+            else server=std::make_unique<LocalHttpServer>(LocalHttpServer::UnauthenticatedLoopback{},handler);
+            const auto port=server->start();
+            output({{"url","http://127.0.0.1:"+std::to_string(port)+"/mcp"},{"profile",local.at("profile")},{"epoch",local.at("epoch")}});
+            std::string stop;std::getline(std::cin,stop);server->stop();return 0;
+        }
         const bool worker=command=="worker";
         if(command=="call"){options["large_results"]=false;if(!options.contains("wait_for_approval")){DWORD mode=0;options["wait_for_approval"]=GetConsoleMode(GetStdHandle(STD_INPUT_HANDLE),&mode)!=FALSE;}}
         Host host(pipe,runtime,writes||worker,worker,options);

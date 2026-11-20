@@ -26,6 +26,6 @@ ReShade bridge and companion; there is no shared Unreal assistant bundle.
 Provider CLIs, model weights and user credentials are not part of this package.
 See SOURCES.txt for upstream source code and integration references.
 
-The separate CyRSAssistantCLI.exe native frontend includes CyMCPSDK 0.7.0
+The separate CyRSAssistantCLI.exe native frontend includes CyMCPSDK 0.7.1
 (MIT), cpp-httplib and PicoSHA2 (MIT). Their complete notices are in this
 folder. This native executable does not contain a Python SDK wrapper.

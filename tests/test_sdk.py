@@ -11,6 +11,8 @@ import subprocess
 import threading
 import time
 import unittest
+import urllib.request
+import urllib.error
 from companion.transport import Client, version
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -57,6 +59,9 @@ class RealReShadeTests(unittest.TestCase):
         self.runtime=self.client.call('list_sessions')['runtimes'][0]['runtime']
         state=self.client.state(self.runtime)
         self.assertEqual(Path(state['base_path']).resolve(),(ROOT/'build/live-sdk').resolve(),'Use only the owned integration host')
+        deadline=time.monotonic()+20
+        while not state['parameters'] and time.monotonic()<deadline:
+            time.sleep(.1);state=self.client.state(self.runtime)
         self.assertTrue(any(p['effect']=='SDKFixture.fx' for p in state['parameters']), 'This test only modifies its own FX fixture')
         self.client.call('set_permission_mode',runtime=self.runtime,session=state['session'],mode=0)
     def cli(self, name, args, write=False, options=None):
@@ -199,6 +204,90 @@ class RealReShadeTests(unittest.TestCase):
                 denied=call('remote_peer_cyrs_apply_patch',{**version(state),'changes':[{'kind':'parameter','id':self.parameter_id(),'value':[1.9]}]})
                 self.assertTrue(denied['isError']);self.assertAlmostEqual(self.value(),original)
             finally:m.close()
+
+    def test_local_http_profiles_free_validation_and_protected_authentication(self):
+        state=self.client.state(self.runtime);base=Path(state['base_path']);options=base/'CyRSAssistant/sdk-options.json'
+        options.parent.mkdir(exist_ok=True);saved=options.read_bytes() if options.exists() else None
+        options.write_text(json.dumps({'wait_for_approval':False}),encoding='utf-8')
+        original=self.value();old_mode=state['permissions']['mode']
+        self.client.call('set_permission_mode',runtime=self.runtime,session=state['session'],mode=1)
+        def configure(profile=None,enabled=True):
+            args={'runtime':self.runtime,'session':state['session'],'enabled':enabled}
+            if profile is not None:args['profile']=profile
+            self.client.call('configure_mcp_local',**args)
+            until=time.monotonic()+25
+            while enabled and time.monotonic()<until:
+                value=self.client.state(self.runtime)['local_mcp']
+                if value['phase']=='ready':return value
+                if value['phase']=='error':self.fail(value['message'])
+                time.sleep(.1)
+            if enabled:self.fail('Local HTTP MCP startup timed out')
+        counter=0
+        sessions={}
+        def rpc(url,method,params=None,token=None):
+            nonlocal counter
+            counter+=1;headers={'Content-Type':'application/json','MCP-Protocol-Version':'2025-06-18'}
+            if method!='initialize' and url in sessions:headers['Mcp-Session-Id']=sessions[url]
+            if token:headers['Authorization']='Bearer '+token
+            data=json.dumps({'jsonrpc':'2.0','id':counter,'method':method,'params':params or {}}).encode()
+            with urllib.request.urlopen(urllib.request.Request(url,data,headers),timeout=10) as response:
+                if method=='initialize':sessions[url]=response.headers['Mcp-Session-Id']
+                return json.load(response)
+        def initialize(url,token=None):
+            return rpc(url,'initialize',{'protocolVersion':'2025-06-18','capabilities':{},'clientInfo':{'name':'http-integration','version':'1'}},token)
+        def read(url,token=None):return rpc(url,'tools/call',{'name':'cyrs_get_parameters','arguments':{'runtime':self.runtime}},token)['result']
+        def write(url,value,token=None):
+            current=self.client.state(self.runtime)
+            return rpc(url,'tools/call',{'name':'cyrs_apply_patch','arguments':{**version(current),'changes':[{'kind':'parameter','id':self.parameter_id(),'value':[value]}]}},token)['result']
+        try:
+            # No profile argument: use the migrated/default choice. A fresh host defaults to Free.
+            info=configure(0);self.assertEqual(info['profile'],0);self.assertFalse(info['requires_token'])
+            url=info['url'];initialize(url)
+            self.assertEqual(len(rpc(url,'tools/list')['result']['tools']),27)
+            self.assertFalse(read(url)['isError'])
+            for value in [1.2,1.3,1.4]:
+                self.assertFalse(write(url,value)['isError']);self.assertAlmostEqual(self.value(),value,places=5)
+            source=rpc(url,'tools/call',{'name':'cyrs_read_effect_source','arguments':{'runtime':self.runtime,'file':'SDKFixture.fx'}})['result']
+            self.assertFalse(source['isError']);self.assertIn('Exposure',source['structuredContent']['source'])
+            scan=rpc(url,'tools/call',{'name':'cyrs_catalog_scan','arguments':version(self.client.state(self.runtime))})['result']
+            self.assertFalse(scan['isError'],scan)
+            invalid=write(url,9);self.assertTrue(invalid['isError']);self.assertAlmostEqual(self.value(),1.4,places=5)
+            bad=rpc(url,'tools/call',{'name':'cyrs_get_parameters','arguments':{'runtime':'invalid'}})['result'];self.assertTrue(bad['isError'])
+            snapshot=self.client.state(self.runtime)
+            self.assertEqual(snapshot['permissions']['mode'],1);self.assertIsNone(snapshot['permissions']['request'])
+            private=self.client.call('get_mcp_connection',runtime=self.runtime)['connection']
+            self.assertNotIn(private['capability'],json.dumps(snapshot))
+            # Controlled without token retains application approval; it must not silently become Free.
+            info=configure(1);initialize(info['url']);self.assertFalse(read(info['url'])['isError'])
+            self.assertTrue(write(info['url'],1.8)['isError']);self.assertAlmostEqual(self.value(),1.4,places=5)
+            # Token only has free business access, with transport authentication.
+            info=configure(2)
+            with self.assertRaises(urllib.error.HTTPError) as refused:initialize(info['url'])
+            self.assertEqual(refused.exception.code,401)
+            token=self.client.call('get_mcp_connection',runtime=self.runtime)['connection']['token']
+            initialize(info['url'],token);self.assertFalse(write(info['url'],1.5,token)['isError'])
+            # Protected combines transport authentication with the existing controlled business policy.
+            info=configure(3)
+            for token in [None,'invalid-token']:
+                with self.assertRaises(urllib.error.HTTPError) as refused:initialize(info['url'],token)
+                self.assertEqual(refused.exception.code,401)
+            token=self.client.call('get_mcp_connection',runtime=self.runtime)['connection']['token']
+            initialize(info['url'],token);self.assertFalse(read(info['url'],token)['isError'])
+            self.assertTrue(write(info['url'],1.8,token)['isError']);self.assertAlmostEqual(self.value(),1.5)
+            self.assertNotIn(token,json.dumps(self.client.state(self.runtime)))
+            configure(enabled=False)
+            until=time.monotonic()+5
+            while time.monotonic()<until:
+                try:read(info['url'],token)
+                except (OSError,urllib.error.HTTPError):break
+                time.sleep(.1)
+            else:self.fail('Disabled MCP listener stayed reachable')
+        finally:
+            self.client.call('configure_mcp_local',runtime=self.runtime,session=state['session'],enabled=False,profile=0)
+            self.client.call('set_permission_mode',runtime=self.runtime,session=state['session'],mode=old_mode)
+            self.cli('cyrs_apply_patch',{**version(self.client.state(self.runtime)),'changes':[{'kind':'parameter','id':self.parameter_id(),'value':[original]}]},True)
+            if saved is None:options.unlink(missing_ok=True)
+            else:options.write_bytes(saved)
 
     def test_context_projection_preserves_checkpoint_and_restores_without_resend(self):
         requests=[]

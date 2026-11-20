@@ -1,4 +1,5 @@
 {
+  "local_access_profile": "free",
   "compact_discovery": true,
   "discovery_threshold": 32,
   "large_results": true,
